@@ -12,18 +12,17 @@ type UptimeResponse struct {
 	StartUpTime int64         `json:"startuptime,omitempty"`
 }
 
-// Goodreads
-
 type BookBreadcrumb struct {
 	Title        string   `json:"title"`
 	Author       string   `json:"author"`
 	Series       string   `json:"series"`
-	Cover        string   `json:"cover"`
+	MainCover    string   `json:"mainCover"`
+	OtherCovers  []string `json:"otherCovers"`
 	Pages        int      `json:"pages"`
 	Link         string   `json:"link"`
 	Rating       float64  `json:"rating"`
 	RatingsCount int      `json:"ratingsCount"`
-	Genres       []string `json:"tags"`
+	Genres       []string `json:"genres"`
 }
 
 type GoodReadsSearchBookResult struct {

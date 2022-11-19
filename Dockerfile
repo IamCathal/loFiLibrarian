@@ -6,7 +6,7 @@ COPY . /build/
 WORKDIR /build
 RUN apk add --no-cache git
 RUN go install -v
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o booksbooksbooks .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o lofilibrarian .
 
 FROM alpine:3.13.6
 COPY --from=builder /build/ .

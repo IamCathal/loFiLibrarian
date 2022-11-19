@@ -68,7 +68,11 @@ func extractGenres(doc *goquery.Document) []string {
 		genres = append(genres, genre.Text())
 	})
 
-	return removeDuplicateGenres(genres)
+	noDuplicates := removeDuplicateGenres(genres)
+	if len(noDuplicates) >= 6 {
+		return noDuplicates[:6]
+	}
+	return noDuplicates
 }
 
 func removeDuplicateGenres(genres []string) []string {
@@ -83,4 +87,19 @@ func removeDuplicateGenres(genres []string) []string {
 		}
 	}
 	return noDuplicatedGenres
+}
+
+func extractOtherCovers(doc *goquery.Document) []string {
+	otherEditionCovers := []string{}
+
+	doc.Find("div[class='otherEditionCovers']").Each(func(i int, otherEditionDiv *goquery.Selection) {
+		otherEditionDiv.Find("img").Each(func(i int, otherEditionImg *goquery.Selection) {
+			otherEditionCoverImg, exists := otherEditionImg.Attr("src")
+			if exists {
+				otherEditionCovers = append(otherEditionCovers, otherEditionCoverImg)
+			}
+		})
+	})
+
+	return otherEditionCovers
 }

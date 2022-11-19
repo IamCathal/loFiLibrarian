@@ -8,53 +8,46 @@ a {
   color: #74797b;
 }
 
-/* .border {
-  border: 1px solid aqua;
-} */
-
-/* .row {
-  border: 1px solid orange;
+/* .col {
+  border: 1px solid red;
+}
+.row {
+  border: 1px solid green;
 } */
 
 body {
   background-color: #22242f;
 }
 
+#bookInfoDiv {
+  border: 2px solid #c0c0c0;
+}
+
 .bold {
   font-family: 'AllianceNo2 Bold';
 }
 
-.linkBox {
-  font-weight: bold; 
-  font-size: 1.4rem;
-  border: 2px solid #c0c0c0;
-}
-
-#mainInputBox {
-    border: 1px solid #c0c0c0; 
-    /* border-radius: 0.3rem;  */
-    padding: 0.4rem;
-    background-color: #22242f;
-    color: #c0c0c0;
-    
-    width: 60%; 
-    font-size: 1.1rem
-}
-
-.automatedCheckShelfURLInput, .settingsInputBox {
-  border: 1px solid #c0c0c0; 
-  /* border-radius: 0.3rem;  */
-  padding: 0.4rem;
-  background-color: #22242f;
-  color: #c0c0c0;
-  padding-top: 0.1rem;
-  padding-bottom: 0.1rem;
-  width: 100%; 
+.genreBox {
   font-size: 0.8rem;
+  font-weight: bold;
+  color: #22242f;
 }
 
-.thinBorder{ 
-  border: 1px solid #c0c0c0;
+.goodGenre {
+  background-color: #18b17c;
+}
+
+.badGenre {
+  background-color: #681d1d;
+  color: #22242f;
+}
+
+.normalGenre {
+  color: #c0c0c0;
+}
+
+.border{ 
+  border: 3px solid #c0c0c0;
 }
 
 .selectedBackground {
@@ -66,13 +59,33 @@ body {
   background-color: #22242f;
 }
 
-.toggleBox {
-  border: 2px solid #c0c0c0;
+.bookTitle {
+  font-weight: bold;
+  font-size: 1.4rem;
+  line-height: 90%;
 }
 
-#newBookMatchRow {
-  color: #22242f;
+.bookSubInfo {
+  font-size: 0.8rem;
 }
+
+.bookPagesAndReview {
+  font-weight: bolder;
+  font-size: 1.2rem;
+}
+
+.otherEditionYearSubText {
+  font-size: 0.7rem;
+}
+
+#searchButton, #clearButton {
+  color: #c0c0c0;
+  background-color: #22242f;
+  font-size: 1.3rem;
+  font-weight: bold;
+  width: 100%;
+}
+
 
 .skeleton {
   opacity: 0.6;
@@ -88,69 +101,16 @@ body {
   }
 }
 
-/* Crawl progress bar */
-.crawlProgressBar {
-    margin: 0rem 0.2rem;
-    height: 0.7rem;
-    background: #22242f;
-    /* background: #e1e4e8; */
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  
-  .crawlProgressBarSpan{
-    /* width: 12%; */
-    display: block;
-    height: 100%;
-    background: linear-gradient(32deg,#ffd33d,#ea4aaa 20%,#b34bff 30%,#4787dc 50%,#ffd33d 70%,#ea4aaa 80%,#b34bff);
-    background-size: 300% 100%;
-    animation: progress-animation 3s linear infinite;
-  }
-  
-  @keyframes progress-animation {
-    0% {
-      background-position: 100%;
-    }
-    100% {
-      background-position: 0;
-    }
-  }
-
-.crawlInfoCol {
-  font-size: 1.4rem;
-  font-size: bold;
-  margin-right: 0.15rem;
-  margin-left: 0.15rem;
-
-  border: 2px solid #c0c0c0;
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-
-.goodReadsBookBox {
-    border: 2px solid #c0c0c0;
-    padding-top: 0.3rem;
-    padding-bottom: 0.3rem;
-}
-
-.bookTitle {
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.bookSeriesText {
-    font-size: 1rem;
-}
-
-.bookAuthor, .bookRating {
-    font-size: 0.9rem;
-}
-
-.titleMatch, .authorMatch {
-  font-size: 0.6rem;
-}
-
-.searchResultBook {
-  width: 2rem;
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 @font-face {

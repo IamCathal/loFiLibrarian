@@ -45,7 +45,8 @@ func extractBookInfo(bookPage string) dtos.BookBreadcrumb {
 	bookInfo.Title = strings.TrimSpace(doc.Find("h1[id='bookTitle']").Text())
 	bookInfo.Author = strings.TrimSpace(doc.Find("span[itemprop='name']").Text())
 	bookInfo.Series = strings.TrimSpace(doc.Find("h2[id='bookSeries']").Text())
-	bookInfo.Cover, _ = doc.Find("img[id='coverImage']").Attr("src")
+	bookInfo.MainCover, _ = doc.Find("img[id='coverImage']").Attr("src")
+	bookInfo.OtherCovers = extractOtherCovers(doc)
 	bookInfo.Pages = extractIntPages(strings.TrimSpace(doc.Find("span[itemprop='numberOfPages']").Text()))
 	bookInfo.Link = bookPage
 	bookInfo.Rating = strToFloat(stripOfFormatting(doc.Find("span[itemprop='ratingValue']").Text()))
