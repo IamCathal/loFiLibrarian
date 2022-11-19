@@ -1,0 +1,168 @@
+* {
+  /* font-family: 'Grotesk Regular'; */
+  font-family: 'AllianceNo2 Regular';
+  color: white;
+}
+
+a {
+  color: #74797b;
+}
+
+/* .border {
+  border: 1px solid aqua;
+} */
+
+/* .row {
+  border: 1px solid orange;
+} */
+
+body {
+  background-color: #22242f;
+}
+
+.bold {
+  font-family: 'AllianceNo2 Bold';
+}
+
+.linkBox {
+  font-weight: bold; 
+  font-size: 1.4rem;
+  border: 2px solid #c0c0c0;
+}
+
+#mainInputBox {
+    border: 1px solid #c0c0c0; 
+    /* border-radius: 0.3rem;  */
+    padding: 0.4rem;
+    background-color: #22242f;
+    color: #c0c0c0;
+    
+    width: 60%; 
+    font-size: 1.1rem
+}
+
+.automatedCheckShelfURLInput, .settingsInputBox {
+  border: 1px solid #c0c0c0; 
+  /* border-radius: 0.3rem;  */
+  padding: 0.4rem;
+  background-color: #22242f;
+  color: #c0c0c0;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+  width: 100%; 
+  font-size: 0.8rem;
+}
+
+.thinBorder{ 
+  border: 1px solid #c0c0c0;
+}
+
+.selectedBackground {
+  color: #22242f;
+  background-color: #c0c0c0;
+}
+
+.unselectedBackground {
+  background-color: #22242f;
+}
+
+.toggleBox {
+  border: 2px solid #c0c0c0;
+}
+
+#newBookMatchRow {
+  color: #22242f;
+}
+
+.skeleton {
+  opacity: 0.6;
+  animation: skeleton-loading 0.56s linear infinite alternate;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-color: #c0c0c0;
+  }
+  100% {
+    background-color: #74797b;
+  }
+}
+
+/* Crawl progress bar */
+.crawlProgressBar {
+    margin: 0rem 0.2rem;
+    height: 0.7rem;
+    background: #22242f;
+    /* background: #e1e4e8; */
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  .crawlProgressBarSpan{
+    /* width: 12%; */
+    display: block;
+    height: 100%;
+    background: linear-gradient(32deg,#ffd33d,#ea4aaa 20%,#b34bff 30%,#4787dc 50%,#ffd33d 70%,#ea4aaa 80%,#b34bff);
+    background-size: 300% 100%;
+    animation: progress-animation 3s linear infinite;
+  }
+  
+  @keyframes progress-animation {
+    0% {
+      background-position: 100%;
+    }
+    100% {
+      background-position: 0;
+    }
+  }
+
+.crawlInfoCol {
+  font-size: 1.4rem;
+  font-size: bold;
+  margin-right: 0.15rem;
+  margin-left: 0.15rem;
+
+  border: 2px solid #c0c0c0;
+}
+
+
+.goodReadsBookBox {
+    border: 2px solid #c0c0c0;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+}
+
+.bookTitle {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.bookSeriesText {
+    font-size: 1rem;
+}
+
+.bookAuthor, .bookRating {
+    font-size: 0.9rem;
+}
+
+.titleMatch, .authorMatch {
+  font-size: 0.6rem;
+}
+
+.searchResultBook {
+  width: 2rem;
+}
+
+@font-face {
+  font-family: 'AllianceNo2 Regular';
+  src: url(../fonts/AllianceNo2-Medium.woff2) format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AllianceNo2 Bold';
+  src: url(../fonts/AllianceNo2-Bold.woff2) format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}

@@ -1,0 +1,31 @@
+version: '3.2'
+
+services:
+  lofilibrarian:
+    build:
+      context: .
+    container_name: lofilibrarian
+    volumes:
+      - ./logs/:/logs/
+    ports:
+      - '2946:2946'
+    networks:
+      - elk
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.4.3-arm64
+    container_name: lofilibrarian-filebeat
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./logs/:/logs/
+    environment:
+      ZINCSEARCH_PASS: $ZINCSEARCH_PASS
+      ZINCSEARCH_INSTANCE_IP: $ZINCSEARCH_INSTANCE_IP
+    networks:
+    - elk
+    depends_on:
+      - lofilibrarian
+
+networks:
+  elk:
+    driver: bridge
