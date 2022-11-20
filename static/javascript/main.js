@@ -15,6 +15,13 @@ document.getElementById("screenshotButton").addEventListener("click", (ev) => {
   const context = document.getElementById("canvas").getContext("2d");
   context.drawImage(document.getElementById("vidOutput"), 0, 0, 200, 140);
   const data = document.getElementById("canvas").toDataURL("image/png");
+
+  const barcodeDetector = new BarcodeDetector();
+  barcodeDetector.detect(data).then(data => {
+    document.getElementById("detectionInfo").textContent = data;
+  });
+}, (err) => {
+    document.getElementById("detectionInfo").textContent = err;
 })
 
 webcam()
