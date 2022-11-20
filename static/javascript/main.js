@@ -1,6 +1,23 @@
 let videoStream = null
-const barcodeDetector = new BarcodeDetector();
 let bookWasFoundDontScanAgainInInterval = false
+var barcodeDetector;
+try {
+  barcodeDetector = new BarcodeDetector();
+} catch (error) {
+  console.log("Barcode detection is not support by your browser. See https://developer.mozilla.org/en-US/docs/Web/API/Barcode_Detection_API#browser_compatibility for support details")
+  hideWebcamElements()
+}
+
+
+webcam()
+giveSwayaaangBordersToItems()
+setInterval(tryToDetectISBN, 250)
+
+
+function hideWebcamElements() {
+  document.getElementById("webcamElements").style.display = "none";
+  document.getElementById("manualEntryDetail").setAttribute("open", true)
+}
 
 function webcam() {
   navigator.mediaDevices.getUserMedia({
@@ -23,11 +40,6 @@ function webcam() {
     videoStream = stream
   });
 }
-
-webcam()
-giveSwayaaangBordersToItems()
-
-setInterval(tryToDetectISBN, 250)
 
 function tryToDetectISBN() {
   if (videoStream != null && bookWasFoundDontScanAgainInInterval == false) {
