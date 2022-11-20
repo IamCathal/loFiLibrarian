@@ -22,18 +22,24 @@
 <body>
     <div class="container mt-4 swankyBorders" style="border: 2px solid #c0c0c0">
         <div class="row">
-            <div class="col">
+            <div class="col text-center">
                 <video id="vidOutput" autoplay> </video>
             </div>
         </div>
-        <canvas id="canvas"></canvas>
-        <button id="screenshotButton">Screenshot</button>
-        <img id="photo">
-        <div id="detectionInfo"></div>
+        <div class="row">
+            <div class="col text-center" id="detectionInfo">
+                Looking for ISBN...
+            </div>
+        </div>
     </div>
 
     <div class="container pl-2 pr-2 pt-3">
-        <div class="row pt-2 pl-3 pr-3">
+
+        <details>
+            <summary class="text-center">
+                Manual Entry
+            </summary>
+            <div class="row pt-2 pl-3 pr-3">
                 <div class="col pl-0 pr-0">
                     <input 
                         type="number"
@@ -43,103 +49,24 @@
                         id="bookIDInput"
                     >
                 </div>
-        </div>
-
-        <div class="row pt-2 pb-2">
-            <div class="col pr-2">
-                <button id="clearButton">Clear</button>    
             </div>
-            <div class="col pl-2">
-                <button id="searchButton">Search</button>    
-            </div>
-        </div>
-
-        <div class="row pt-3">
-
-        </div>
-<!-- 
-        <div class="row pl-3 pb-3 justify-content-md-start">
-           <div class="col-2">
-                <div class="row justify-content-md-center">
-                   <div class="col p-0 text-center">
-                        <img 
-                            src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1426365890i/25143052._UY200_.jpg"
-                            style="width: 5rem;"
-                        />
-                   </div>
+            <div class="row pt-2 pb-2">
+                <div class="col pr-2">
+                    <button id="clearButton">Clear</button>    
                 </div>
-                <div class="row">
-                    <div class="col text-center otherEditionYearSubText">
-                        2022
-                    </div>
-                </div>
-           </div>
-           <div class="col-2">
-            <div class="row justify-content-md-center">
-               <div class="col p-0 text-center">
-                    <img 
-                        src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1426365890i/25143052._UY200_.jpg"
-                        style="width: 5rem;"
-                    />
-               </div>
-            </div>
-            <div class="row">
-                <div class="col text-center otherEditionYearSubText">
-                    2022
+                <div class="col pl-2">
+                    <button id="searchButton">Search</button>    
                 </div>
             </div>
-       </div> -->
+        </details>
+
+        <div class="row pt-3"> </div>
+
+
 
         <div class="row pl-3 pr-3">
             <div class="col p-3" id="bookInfoDiv">
-                <!-- <div class="row p-3">
-                    <div class="col">
-                        <div class="row p-3">
-                            <div class="col-3 pl-1 pr-1" title="" style="">
-                                <img src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1452624392l/1215032.jpg" style="width: 95%;" title="">
-                            </div>
-                            <div class="col">
-                                <div class="row bookTitle">
-                                    The Wise Man's Fear
-                                </div>
-                                <div class="row bookSubInfo">
-                                    (The Kingkiller Chronicle #2)
-                                </div>
-                                <div class="row bookSubInfo">
-                                    Patrick Rothfuss
-                                </div>
-                                <div class="row bookSubInfo">
-                                    <div class="col-4 pl-0">
-                                        994 pages
-                                    </div>
-                                    <div class="col pl-0">
-                                        4.55 stars over 501,863 reviews
-                                    </div>
-                                </div>
-                                <div class="row bookSubInfo">
-                                    Fantasy,Fiction,Epic Fantasy,High Fantasy,Magic,Science Fiction Fantasy
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col text-center">
-                                <img src="/static/images/checkmark.svg" style="width: 50%; filter: invert(65%) sepia(62%) saturate(2900%) hue-rotate(58deg) brightness(97%) contrast(94%);">
-                            </div>
-                            <div class="col text-center">
-                                <div class="genreBox goodGenre"> Fantasy </div>
-                            </div>
-                            <div class="col text-center">
-                                e
-                            </div>
-                            <div class="col text-center">
-                                e
-                            </div>
-                            <div class="col text-center">
-                                e
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
+
             </div>
         </div>
     </div>

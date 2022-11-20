@@ -1,46 +1,79 @@
+let videoStream = null
+const barcodeDetector = new BarcodeDetector();
+let bookWasFoundDontScanAgainInInterval = false
+
 function webcam() {
   navigator.mediaDevices.getUserMedia({
     video: {
-      width: 200,
-      height: 140,
+      height: {
+        min: 200,
+        max: 320,
+        ideal: 300
+      },
+      width: {
+        min: 80,
+        max: 160,
+        ideal: 140
+      },
       facingMode: "environment"
     }
   })
   .then(stream => {
     document.getElementById("vidOutput").srcObject = stream;
+    videoStream = stream
   });
 }
-
-document.getElementById("screenshotButton").addEventListener("click", (ev) => {
-  const context = document.getElementById("canvas").getContext("2d");
-  context.drawImage(document.getElementById("vidOutput"), 0, 0, 200, 140);
-  const data = document.getElementById("canvas").toDataURL("image/png");
-
-  const barcodeDetector = new BarcodeDetector();
-  barcodeDetector.detect(data).then(data => {
-    document.getElementById("detectionInfo").textContent = data;
-  });
-}, (err) => {
-    document.getElementById("detectionInfo").textContent = err;
-})
 
 webcam()
 giveSwayaaangBordersToItems()
 
+setInterval(tryToDetectISBN, 250)
+
+function tryToDetectISBN() {
+  if (videoStream != null && bookWasFoundDontScanAgainInInterval == false) {
+    let capturer = new ImageCapture(videoStream.getVideoTracks()[0])
+    capturer.grabFrame().then(bitMap => {
+      barcodeDetector
+        .detect(bitMap)
+        .then((barcodes) => {
+          if (barcodes.length >= 1) {
+            bookWasFoundDontScanAgainInInterval = true
+            document.getElementById("detectionInfo").textContent = `Detected: ${barcodes[0].rawValue}`
+            lookUpId(barcodes[0].rawValue)
+
+            setTimeout(() => {
+              document.getElementById("detectionInfo").textContent = `Looking for ISBN...`
+              bookWasFoundDontScanAgainInInterval = false
+            }, 2600)
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          document.getElementById("detectionInfo").textContent += err;
+        });
+      })
+  }
+}
+
 document.getElementById("searchButton").addEventListener("click", (ev) => {
-  const bookID = document.getElementById("bookIDInput").value
-  document.getElementById("searchButton").classList.add("skeleton")
-  document.getElementById("searchButton").style.color = "#22242f"
-  lookUp(bookID).then(res => {
-    fillInBookInfo(res)
-    document.getElementById("searchButton").classList.remove("skeleton")
-    document.getElementById("searchButton").style.color = "#c0c0c0"
-  }, (err) => {
-    console.error(err)
-    document.getElementById("searchButton").classList.remove("skeleton")
-    document.getElementById("searchButton").style.color = "#c0c0c0"
-  })
+  lookUpId(document.getElementById("bookIDInput").value)
 })
+
+function lookUpId(id) {
+  return new Promise((resolve, reject) => {
+    document.getElementById("searchButton").classList.add("skeleton")
+    document.getElementById("searchButton").style.color = "#22242f"
+    lookUp(id).then(res => {
+      fillInBookInfo(res)
+      document.getElementById("searchButton").classList.remove("skeleton")
+      document.getElementById("searchButton").style.color = "#c0c0c0"
+    }, (err) => {
+      console.error(err)
+      document.getElementById("searchButton").classList.remove("skeleton")
+      document.getElementById("searchButton").style.color = "#c0c0c0"
+    })
+  })
+}
 
 document.getElementById("clearButton").addEventListener("click", (ev) => {
   clearBooks()
