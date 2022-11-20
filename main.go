@@ -38,8 +38,6 @@ func main() {
 	endpoints.InitConfig(appConfig, logger)
 	goodreads.SetLogger(logger)
 
-	// fmt.Printf("%+v\n", goodreads.GetBookDetails("9781490326252"))
-
 	port := 2946
 
 	router := endpoints.SetupRouter()

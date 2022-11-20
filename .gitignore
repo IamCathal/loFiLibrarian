@@ -19,3 +19,4 @@ coverage.*
 logs/
 .env
 filebeat/
+docker-compose.override.yml

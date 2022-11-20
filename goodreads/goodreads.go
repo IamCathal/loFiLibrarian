@@ -21,6 +21,7 @@ func SetLogger(newLogger *zap.Logger) {
 }
 
 func GetBookDetails(ID string) dtos.BookBreadcrumb {
+	logger.Sugar().Infof("Retrieving book details for ID: %s", ID)
 	body := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
 	bodyBtytes, err := io.ReadAll(body)
 	checkErr(err)
@@ -33,6 +34,7 @@ func GetBookDetails(ID string) dtos.BookBreadcrumb {
 		logger.Sugar().Infof("No books found for ID: %s", ID)
 		return dtos.BookBreadcrumb{}
 	}
+	logger.Sugar().Infof("%d books were found for ID: %s", len(booksFoundRes), ID)
 	return extractBookInfo(booksFoundRes[0].Description.FullContentURL)
 }
 
@@ -54,6 +56,7 @@ func extractBookInfo(bookPage string) dtos.BookBreadcrumb {
 	bookInfo.RatingsCount = strToInt(ratingsCountStr)
 	bookInfo.Genres = extractGenres(doc)
 
+	logger.Sugar().Infof("Extracted all details for book URL: %s, bookInfo: %+v", bookPage, bookInfo)
 	return bookInfo
 }
 
