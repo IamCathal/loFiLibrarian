@@ -40,3 +40,13 @@ func isValidInt(strInt string) bool {
 	_, err := strconv.Atoi(strInt)
 	return err == nil
 }
+
+func getRealIP(r *http.Request) string {
+	realIp := ""
+	if r.Header.Get("X-Real-Ip") != "" {
+		return r.Header.Get("X-Real-Ip")
+	} else if r.Header.Get("RemoteAddr") != "" {
+		return r.Header.Get("RemoteAddr")
+	}
+	return realIp
+}
