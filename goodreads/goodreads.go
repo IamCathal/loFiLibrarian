@@ -34,7 +34,7 @@ func GetBookDetails(ID string) dtos.BookBreadcrumb {
 		logger.Sugar().Infof("No books found for ID: %s", ID)
 		return dtos.BookBreadcrumb{}
 	}
-	logger.Sugar().Infof("%d books were found for ID: %s", len(booksFoundRes), ID)
+	logger.Sugar().Infof("%d books were found for ID: %s at %s", len(booksFoundRes), ID, booksFoundRes[0].Description.FullContentURL)
 	return extractBookInfo(booksFoundRes[0].Description.FullContentURL)
 }
 

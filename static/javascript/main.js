@@ -51,7 +51,7 @@ function tryToDetectISBN() {
         .detect(bitMap)
         .then((barcodes) => {
           if (barcodes.length >= 1) {
-            if (barcodes[0] == lastFoundBookID) {
+            if (barcodes[0].rawValue == lastFoundBookID) {
               document.getElementById("detectionInfo").textContent = `This book was just looked up`
             } else {
               bookWasFoundDontScanAgainInInterval = true

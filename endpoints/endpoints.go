@@ -87,7 +87,8 @@ func logMiddleware(next http.Handler) http.Handler {
 			realIp := getRealIP(r)
 			if realIp != "" {
 				writeAPI := InfluxDBClient.WriteAPIBlocking(os.Getenv("ORG"), os.Getenv("LOFI_BUCKET"))
-				point := influxdb2.NewPointWithMeasurement("clientIP").
+				point := influxdb2.NewPointWithMeasurement("clientIPLog").
+					AddField("service", "lofilibrarian").
 					AddTag("clientIP", realIp).
 					SetTime(time.Now())
 				writeAPI.WritePoint(context.Background(), point)
