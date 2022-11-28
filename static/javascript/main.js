@@ -1,6 +1,8 @@
 let videoStream = null
 let bookWasFoundDontScanAgainInInterval = false
+let lastFoundBookID = ""
 var barcodeDetector;
+
 try {
   barcodeDetector = new BarcodeDetector();
 } catch (error) {
@@ -11,7 +13,7 @@ try {
 
 webcam()
 giveSwayaaangBordersToItems()
-setInterval(tryToDetectISBN, 250)
+setInterval(tryToDetectISBN, 150)
 
 
 function hideWebcamElements() {
@@ -49,14 +51,20 @@ function tryToDetectISBN() {
         .detect(bitMap)
         .then((barcodes) => {
           if (barcodes.length >= 1) {
-            bookWasFoundDontScanAgainInInterval = true
-            document.getElementById("detectionInfo").textContent = `Detected: ${barcodes[0].rawValue}`
-            lookUpId(barcodes[0].rawValue)
+            if (barcodes[0] == lastFoundBookID) {
+              document.getElementById("detectionInfo").textContent = `This book was just looked up`
+            } else {
+              bookWasFoundDontScanAgainInInterval = true
+              document.getElementById("detectionInfo").textContent = `Detected: ${barcodes[0].rawValue}`
+              lookUpId(barcodes[0].rawValue)
+              lastFoundBookID = barcodes[0]
 
-            setTimeout(() => {
-              document.getElementById("detectionInfo").textContent = `Looking for ISBN...`
-              bookWasFoundDontScanAgainInInterval = false
-            }, 2600)
+              setTimeout(() => {
+                document.getElementById("detectionInfo").textContent = `Looking for ISBN...`
+                bookWasFoundDontScanAgainInInterval = false
+              }, 500)
+            }
+          
           }
         })
         .catch((err) => {
@@ -96,10 +104,12 @@ function fillInBookInfo(bookInfo) {
   `
               <div class="row p-3">
                 <div class="col-3 pl-1 pr-1">
-                  <img 
+                  <a href="${bookInfo.link}">
+                    <img 
                       src="${bookInfo.mainCover}"
                       style="width: 90%"
-                  >
+                    >
+                  </a>
                 </div>
                 <div class="col">
                   <div class="row bookTitle">
