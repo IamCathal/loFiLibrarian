@@ -20,6 +20,7 @@ var (
 	// Crude to check if a roughly  valid
 	// shelf URL is being queried
 	GOODREADS_SHELF_URL_PREFIX = GOODREADS_BASE_BOOK_URL + "/review/list/"
+	ONLY_NUMBERS               = regexp.MustCompile(`([0-9]+)`)
 )
 
 func checkErr(err error) {
@@ -48,24 +49,28 @@ func strToFloat(floatString string) float64 {
 	return floatVal
 }
 
+func getRatingsCount(ratingsString string) int {
+	extractedNumbers := ONLY_NUMBERS.FindAllString(ratingsString, 2)
+	return strToInt(extractedNumbers[0])
+}
+
 func getFakeReferrerPage(URL string) string {
 	splitStringByShelfParam := strings.Split(URL, "?")
 	return splitStringByShelfParam[0]
 }
 
 func extractIntPages(pagesString string) int {
-	numbers := strings.Split(pagesString, " ")
-	if len(numbers) != 2 {
-		logger.Sugar().Fatalf("failed to parse pagesString: %s", pagesString)
-	}
-	return strToInt(numbers[0])
+	extractedNumbers := ONLY_NUMBERS.FindAllString(pagesString, 2)
+	return strToInt(extractedNumbers[0])
 }
 
 func extractGenres(doc *goquery.Document) []string {
 	genres := []string{}
 
-	doc.Find(".actionLinkLite.bookPageGenreLink").Each(func(i int, genre *goquery.Selection) {
-		genres = append(genres, genre.Text())
+	doc.Find("span.BookPageMetadataSection__genreButton").Each(func(i int, genre *goquery.Selection) {
+		if genre.Text() != "Genres" {
+			genres = append(genres, genre.Text())
+		}
 	})
 
 	noDuplicates := removeDuplicateGenres(genres)

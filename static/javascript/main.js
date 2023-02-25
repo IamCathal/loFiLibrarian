@@ -1,6 +1,6 @@
 let videoStream = null
 let bookWasFoundDontScanAgainInInterval = false
-let lastFoundBookID = ""
+let lastFoundBookID;
 var barcodeDetector;
 
 try {
@@ -57,7 +57,7 @@ function tryToDetectISBN() {
               bookWasFoundDontScanAgainInInterval = true
               document.getElementById("detectionInfo").textContent = `Detected: ${barcodes[0].rawValue}`
               lookUpId(barcodes[0].rawValue)
-              lastFoundBookID = barcodes[0]
+              lastFoundBookID = barcodes[0].rawValue
 
               setTimeout(() => {
                 document.getElementById("detectionInfo").textContent = `Looking for ISBN...`
@@ -75,7 +75,7 @@ function tryToDetectISBN() {
   }
 }
 
-document.getElementById("searchButton").addEventListener("click", (ev) => {
+document.getElementById("searchButton").addEventListener("click", () => {
   lookUpId(document.getElementById("bookIDInput").value)
 })
 

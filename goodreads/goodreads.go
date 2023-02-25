@@ -44,16 +44,16 @@ func extractBookInfo(bookPage string) dtos.BookBreadcrumb {
 
 	bookInfo := dtos.BookBreadcrumb{}
 
-	bookInfo.Title = strings.TrimSpace(doc.Find("h1[id='bookTitle']").Text())
-	bookInfo.Author = strings.TrimSpace(doc.Find("span[itemprop='name']").Text())
-	bookInfo.Series = strings.TrimSpace(doc.Find("h2[id='bookSeries']").Text())
-	bookInfo.MainCover, _ = doc.Find("img[id='coverImage']").Attr("src")
+	bookInfo.Title = strings.TrimSpace(doc.Find("h1.Text").Text())
+	bookInfo.Author = strings.TrimSpace(doc.Find(".ContributorLinksList > span:nth-child(1) > a:nth-child(1) > span:nth-child(1)").Text())
+	bookInfo.Series = strings.TrimSpace(doc.Find("h3.Text__italic > a:nth-child(1)").Text())
+	bookInfo.MainCover, _ = doc.Find("div.BookCard__clickCardTarget > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)").Attr("src")
 	bookInfo.OtherCovers = extractOtherCovers(doc)
-	bookInfo.Pages = extractIntPages(strings.TrimSpace(doc.Find("span[itemprop='numberOfPages']").Text()))
+	bookInfo.Pages = extractIntPages(strings.TrimSpace(doc.Find(".FeaturedDetails > p:nth-child(1)").Text()))
 	bookInfo.Link = bookPage
-	bookInfo.Rating = strToFloat(stripOfFormatting(doc.Find("span[itemprop='ratingValue']").Text()))
-	ratingsCountStr, _ := doc.Find("meta[itemprop='ratingCount']").Attr("content")
-	bookInfo.RatingsCount = strToInt(ratingsCountStr)
+	bookInfo.Rating = strToFloat(stripOfFormatting(doc.Find("a.RatingStatistics > div:nth-child(1) > div:nth-child(2)").Text()))
+	ratingsCountStr := doc.Find("a.RatingStatistics > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)").Text()
+	bookInfo.RatingsCount = getRatingsCount(ratingsCountStr)
 	bookInfo.Genres = extractGenres(doc)
 
 	logger.Sugar().Infof("Extracted all details for book URL: %s, bookInfo: %+v", bookPage, bookInfo)
