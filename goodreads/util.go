@@ -1,11 +1,13 @@
 package goodreads
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/iamcathal/lofilibrarian/dtos"
 )
 
 var (
@@ -107,4 +109,10 @@ func extractOtherCovers(doc *goquery.Document) []string {
 	})
 
 	return otherEditionCovers
+}
+
+func getConciseBookInfoFromBreadCrumb(breadCrumb dtos.BookBreadcrumb) string {
+	return fmt.Sprintf("%s by %s %s %.2f stars and has genres %+v",
+		breadCrumb.Title, breadCrumb.Author, breadCrumb.Series,
+		breadCrumb.Rating, breadCrumb.Genres)
 }

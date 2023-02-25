@@ -56,7 +56,7 @@ func extractBookInfo(bookPage string) dtos.BookBreadcrumb {
 	bookInfo.RatingsCount = getRatingsCount(ratingsCountStr)
 	bookInfo.Genres = extractGenres(doc)
 
-	logger.Sugar().Infof("Extracted all details for book URL: %s, bookInfo: %+v", bookPage, bookInfo)
+	logger.Sugar().Infof("Extracted all details for: %+v", getConciseBookInfoFromBreadCrumb(bookInfo))
 	return bookInfo
 }
 
