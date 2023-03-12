@@ -76,7 +76,7 @@ type WsBookInfo struct {
 type WsError struct {
 	Timestamp    int64  `json:"time"`
 	ID           string `json:"id"`
-	ErrorMessage string `json:"errormessage"`
+	ErrorMessage string `json:"errorMessage"`
 }
 
 type InitLookupDto struct {

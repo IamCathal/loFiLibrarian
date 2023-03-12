@@ -81,15 +81,7 @@ function lookUpIdWs(id){
     return new Promise((resolve, reject) => {
         document.getElementById("searchButton").classList.add("skeleton")
         document.getElementById("searchButton").style.color = "#22242f"
-        lookUpWs(id).then(res => {
-            // fillInBookInfo(res)
-            document.getElementById("searchButton").classList.remove("skeleton")
-            document.getElementById("searchButton").style.color = "#c0c0c0"
-        }, (err) => {
-            console.error(err)
-            document.getElementById("searchButton").classList.remove("skeleton")
-            document.getElementById("searchButton").style.color = "#c0c0c0"
-        })
+        lookUpWs(id)
     })
 }
 
@@ -99,12 +91,10 @@ function lookUpId(id) {
     document.getElementById("searchButton").style.color = "#22242f"
     lookUp(id).then(res => {
       renderPartialBookBreadcrumb(res)
-      document.getElementById("searchButton").classList.remove("skeleton")
-      document.getElementById("searchButton").style.color = "#c0c0c0"
+      removeSearchButtonSkeleton()
     }, (err) => {
       console.error(err)
-      document.getElementById("searchButton").classList.remove("skeleton")
-      document.getElementById("searchButton").style.color = "#c0c0c0"
+      removeSearchButtonSkeleton()
     })
   })
 }
@@ -185,7 +175,9 @@ function renderRemainingBookBreadcrumbDetails(bookInfo, timeTaken) {
     })
     document.querySelectorAll(".bookSeries").forEach(ev => {
       ev.classList.remove("skeleton")
+      ev.style.width = "100%"
     })
+
 
     document.getElementById(`${bookInfo.isbn}-genres`).innerHTML = fillInGenreBlocks(bookInfo.genres)
     document.getElementById(`${bookInfo.isbn}-series`).innerHTML = bookInfo.series
@@ -240,6 +232,9 @@ function lookUpWs(bookId) {
               renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
             }
             break
+        case "error":
+            document.getElementById("bookInfoDiv").innerHTML = response.errorMessage
+            break
 
         default:
           console.error("no type")
@@ -248,6 +243,7 @@ function lookUpWs(bookId) {
 
     socket.onclose = function(ev) {
       console.log("socket closed!")
+      removeSearchButtonSkeleton()
     }
 }
 
@@ -273,10 +269,17 @@ function getMessageType(messageObj) {
       return "message"
     } else if (messageObj.bookInfo != undefined) {
       return "bookInfo"
+    } else if (messageObj.errormessage != undefined) {
+      return "error"
     }
 
     console.error("Cant determine message type")
     return ""
+}
+
+function removeSearchButtonSkeleton() {
+  document.getElementById("searchButton").classList.remove("skeleton")
+  document.getElementById("searchButton").style.color = "#c0c0c0"
 }
 
 function giveSwayaaangBordersToItems() {
