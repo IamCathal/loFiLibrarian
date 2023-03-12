@@ -1,14 +1,17 @@
 package goodreads
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/iamcathal/lofilibrarian/dtos"
+	"github.com/iamcathal/lofilibrarian/util"
 	"go.uber.org/zap"
 )
 
@@ -18,6 +21,52 @@ var (
 
 func SetLogger(newLogger *zap.Logger) {
 	logger = newLogger
+}
+
+func GetBookDetailsWs(ctx context.Context, ID string) dtos.BookBreadcrumb {
+	startTime := time.Now().UnixMilli()
+	logger.Sugar().Infof("Retrieving book details for ID: %s", ID)
+	body := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
+	bodyBtytes, err := io.ReadAll(body)
+	checkErr(err)
+
+	booksFoundRes := []dtos.GoodReadsSearchBookResult{}
+	err = json.Unmarshal(bodyBtytes, &booksFoundRes)
+	checkErr(err)
+
+	if len(booksFoundRes) == 0 {
+		logger.Sugar().Infof("No books found for ID: %s", ID)
+		return dtos.BookBreadcrumb{}
+	}
+	book := booksFoundRes[0]
+	partialBookBreadcrumb := dtos.BookBreadcrumb{
+		Title:        book.BookTitleBare,
+		Author:       book.Author.Name,
+		Series:       "",
+		MainCover:    book.ImageURL,
+		OtherCovers:  []string{},
+		Pages:        book.NumPages,
+		Link:         book.Description.FullContentURL,
+		Rating:       strToFloat(book.AvgRating),
+		RatingsCount: book.RatingsCount,
+		Genres:       []string{},
+		ISBN:         ID,
+	}
+
+	ctx = context.WithValue(ctx, "timeTaken", time.Now().UnixMilli()-startTime)
+	util.WriteWsPartialBookInfo(ctx, partialBookBreadcrumb)
+	logger.Sugar().Infof("%d books were found for ID: %s at %s", len(booksFoundRes), ID, booksFoundRes[0].Description.FullContentURL)
+
+	return lookUpGoodReadsPageForBook(ctx, book.Description.FullContentURL, ID)
+}
+
+func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL, isbn string) dtos.BookBreadcrumb {
+	startTime := time.Now().UnixMilli()
+	fullBookInfo := extractBookInfo(bookPageURL)
+	fullBookInfo.ISBN = isbn
+	ctx = context.WithValue(ctx, "timeTaken", time.Now().UnixMilli()-startTime)
+	util.WriteWsPartialBookInfo(ctx, fullBookInfo)
+	return fullBookInfo
 }
 
 func GetBookDetails(ID string) dtos.BookBreadcrumb {

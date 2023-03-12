@@ -10,11 +10,9 @@ try {
   hideWebcamElements()
 }
 
-
 webcam()
 giveSwayaaangBordersToItems()
 setInterval(tryToDetectISBN, 150)
-
 
 function hideWebcamElements() {
   document.getElementById("webcamElements").style.display = "none";
@@ -76,15 +74,31 @@ function tryToDetectISBN() {
 }
 
 document.getElementById("searchButton").addEventListener("click", () => {
-  lookUpId(document.getElementById("bookIDInput").value)
+    lookUpIdWs(document.getElementById("bookIDInput").value)
 })
+
+function lookUpIdWs(id){
+    return new Promise((resolve, reject) => {
+        document.getElementById("searchButton").classList.add("skeleton")
+        document.getElementById("searchButton").style.color = "#22242f"
+        lookUpWs(id).then(res => {
+            // fillInBookInfo(res)
+            document.getElementById("searchButton").classList.remove("skeleton")
+            document.getElementById("searchButton").style.color = "#c0c0c0"
+        }, (err) => {
+            console.error(err)
+            document.getElementById("searchButton").classList.remove("skeleton")
+            document.getElementById("searchButton").style.color = "#c0c0c0"
+        })
+    })
+}
 
 function lookUpId(id) {
   return new Promise((resolve, reject) => {
     document.getElementById("searchButton").classList.add("skeleton")
     document.getElementById("searchButton").style.color = "#22242f"
     lookUp(id).then(res => {
-      fillInBookInfo(res)
+      renderPartialBookBreadcrumb(res)
       document.getElementById("searchButton").classList.remove("skeleton")
       document.getElementById("searchButton").style.color = "#c0c0c0"
     }, (err) => {
@@ -99,46 +113,83 @@ document.getElementById("clearButton").addEventListener("click", (ev) => {
   clearBooks()
 })
 
-function fillInBookInfo(bookInfo) {
+function renderPartialBookBreadcrumb(bookInfo, timeTaken, timeTakenForInitialRequest) {
+  const timeTakenFormatted = timeTakenString(timeTaken)
   document.getElementById("bookInfoDiv").innerHTML = 
   `
-              <div class="row p-3">
-                <div class="col-3 pl-1 pr-1">
-                  <a href="${bookInfo.link}">
-                    <img 
-                      src="${bookInfo.mainCover}"
-                      style="width: 90%"
-                    >
-                  </a>
-                </div>
-                <div class="col">
-                  <div class="row bookTitle">
-                      ${bookInfo.title}
-                  </div>
-                  <div class="row bookSubInfo">
-                      ${bookInfo.series}
-                  </div>
-                  <div class="row bookSubInfo">
-                      ${bookInfo.author}
-                  </div>
-                  <div class="row bookPagesAndReview">
-                    <div class="col-4 pl-0">
-                      ${bookInfo.pages}
+              <div class="row pt-1 pb-1 pl-2 pr-2" id="${bookInfo.isbn}">
+                  <div class="col">
+                    <div class="row">
+                      <div class="col-3 pl-1 pr-1">
+                      <a href="${bookInfo.link}">
+                        <img 
+                          src="${bookInfo.mainCover}"
+                          style="width: 90%"
+                        >
+                      </a>
                     </div>
-                    <div class="col pl-0">
-                      ${bookInfo.rating}
+                    <div class="col">
+                      <div class="row bookTitle">
+                          ${bookInfo.title}
+                      </div>
+                      <div class="row bookSubInfo bookSeries skeleton" id="${bookInfo.isbn}-series" style="width: 9.2rem; height: 1.2rem">
+                          ${bookInfo.series}
+                      </div>
+                      <div class="row bookSubInfo">
+                          ${bookInfo.author}
+                      </div>
+                      <div class="row bookPagesAndReview">
+                        <div class="col-4 pl-0">
+                          ${bookInfo.pages.toLocaleString()}
+                        </div>
+                        <div class="col pl-0">
+                          ${bookInfo.rating}
+                        </div>
+                        <div class="col pl-0">
+                          ${bookInfo.ratingsCount.toLocaleString()}
+                        </div>
+                      </div>
+                      <div class="row bookSubInfo" id="${bookInfo.isbn}-genres">
+                          <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 9.2rem; height: 1.2rem"> </div>
+                          <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 5.1rem; height: 1.2rem"> </div>
+                          <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 2.8rem; height: 1.2rem"> </div>
+                          <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 6.5rem; height: 1.2rem"> </div>
+                          <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 3.5rem; height: 1.2rem"> </div>
+                      </div>
                     </div>
-                    <div class="col pl-0">
-                      ${bookInfo.ratingsCount.toLocaleString()}
+                    </div>
+
+                    <div class="row pt-1">
+                        <div class="col text-center timeTakenText" id="${bookInfo.isbn}-firstRequestTimeTaken">
+                          ${timeTakenString(timeTakenForInitialRequest)}
+                        </div>
+                        <div class="col text-center timeTakenText" id="${bookInfo.isbn}-apiLookUpTimeTaken">
+                          ${timeTakenString(timeTaken)}
+                        </div>
+                        <div class="col text-center timeTakenText" id="${bookInfo.isbn}-pageLookupTimeTaken">
+
+                        </div>
                     </div>
                   </div>
-                  <div class="row bookSubInfo">
-                      ${fillInGenreBlocks(bookInfo.genres)}
-                  </div>
-                </div>
               </div>
+
+              <hr class="mt-0 mb-4" style="background-color: #c0c0c0"/>
   
   ` + document.getElementById("bookInfoDiv").innerHTML 
+}
+
+function renderRemainingBookBreadcrumbDetails(bookInfo, timeTaken) {
+    // fill in genres, seriesText and maybe the new profiler
+    document.querySelectorAll(".genreBox").forEach(ev => {
+      ev.classList.remove("skeleton")
+    })
+    document.querySelectorAll(".bookSeries").forEach(ev => {
+      ev.classList.remove("skeleton")
+    })
+
+    document.getElementById(`${bookInfo.isbn}-genres`).innerHTML = fillInGenreBlocks(bookInfo.genres)
+    document.getElementById(`${bookInfo.isbn}-series`).innerHTML = bookInfo.series
+    document.getElementById(`${bookInfo.isbn}-pageLookupTimeTaken`).innerHTML = timeTakenString(timeTaken)
 }
 
 function fillInGenreBlocks(genres) {
@@ -151,6 +202,53 @@ function fillInGenreBlocks(genres) {
 
 function clearBooks() {
   document.getElementById("bookInfoDiv").innerHTML = ""
+}
+
+function lookUpWs(bookId) {
+    const startTime = new Date()
+    const socket = new WebSocket(`ws://localhost:2946/lookupws`);
+    socket.onopen = function(ev) {
+      const lookUpRequest = {
+        "id": crypto.randomUUID(),
+        "bookId": bookId
+      }
+      socket.send(JSON.stringify(lookUpRequest))
+    }
+
+    let partialBookBreadcrumbReceived = false
+    let timeTakenForInitialRequest = 0
+
+
+    socket.onmessage = function(ev) {
+      const response = JSON.parse(ev.data)
+      console.log(`Latency is ${timeSince(new Date(response.time))}`)
+      console.log(response)
+
+      switch (getMessageType(response)) {
+        case "message":
+            console.log("Message type")
+            console.log(response.msg)
+            timeTakenForInitialRequest = new Date().getTime() - startTime.getTime()
+            break
+
+        case "bookInfo":
+          console.log(response.bookInfo)
+            if (!partialBookBreadcrumbReceived) {
+              partialBookBreadcrumbReceived = true
+              renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
+            } else {
+              renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
+            }
+            break
+
+        default:
+          console.error("no type")
+      }
+    }
+
+    socket.onclose = function(ev) {
+      console.log("socket closed!")
+    }
 }
 
 function lookUp(bookID) {
@@ -168,6 +266,17 @@ function lookUp(bookID) {
         reject(err)
     });
   })
+}
+
+function getMessageType(messageObj) {
+    if (messageObj.msg != undefined) {
+      return "message"
+    } else if (messageObj.bookInfo != undefined) {
+      return "bookInfo"
+    }
+
+    console.error("Cant determine message type")
+    return ""
 }
 
 function giveSwayaaangBordersToItems() {
@@ -205,4 +314,17 @@ function getGenreClass(genre) {
     return "badGenre"
   }
   return "normalGenre"
+}
+
+function timeSince(targetDate) {
+    let diffInMs = Math.abs(targetDate.getTime() - new Date())
+
+    if (diffInMs > 1000) {
+        return Math.floor(diffInMs / 1000)+"s"
+    }
+    return diffInMs+"ms"
+}
+
+function timeTakenString(timeTakenMs) {
+  return timeTakenMs >= 1000 ? `${timeTakenMs/1000}s` : `${timeTakenMs}ms`
 }

@@ -23,6 +23,7 @@ type BookBreadcrumb struct {
 	Rating       float64  `json:"rating"`
 	RatingsCount int      `json:"ratingsCount"`
 	Genres       []string `json:"genres"`
+	ISBN         string   `json:"isbn"`
 }
 
 type GoodReadsSearchBookResult struct {
@@ -56,4 +57,29 @@ type GoodReadsDescription struct {
 	HTML           string `json:"html"`
 	Truncated      bool   `json:"truncated"`
 	FullContentURL string `json:"fullContentUrl"`
+}
+
+type WsMessage struct {
+	Timestamp int64  `json:"time"`
+	ID        string `json:"id"`
+	BookId    string `json:"bookId"`
+	Msg       string `json:"msg"`
+}
+
+type WsBookInfo struct {
+	Timestamp int64          `json:"time"`
+	ID        string         `json:"id"`
+	TimeTaken int64          `json:"timeTaken"`
+	BookInfo  BookBreadcrumb `json:"bookInfo"`
+}
+
+type WsError struct {
+	Timestamp    int64  `json:"time"`
+	ID           string `json:"id"`
+	ErrorMessage string `json:"errormessage"`
+}
+
+type InitLookupDto struct {
+	ID     string `json:"id"`
+	BookId string `json:"bookId"`
 }

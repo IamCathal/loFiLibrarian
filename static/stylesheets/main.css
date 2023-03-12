@@ -86,6 +86,10 @@ body {
   width: 100%;
 }
 
+.timeTakenText {
+  color: #c0c0c0;
+  font-size: 0.7rem;
+}
 
 .skeleton {
   opacity: 0.6;
