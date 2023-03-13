@@ -54,7 +54,7 @@ function tryToDetectISBN() {
             } else {
               bookWasFoundDontScanAgainInInterval = true
               document.getElementById("detectionInfo").textContent = `Detected: ${barcodes[0].rawValue}`
-              lookUpId(barcodes[0].rawValue)
+              lookUpIdWs(barcodes[0].rawValue)
               lastFoundBookID = barcodes[0].rawValue
 
               setTimeout(() => {
@@ -79,24 +79,9 @@ document.getElementById("searchButton").addEventListener("click", () => {
 
 function lookUpIdWs(id){
     return new Promise((resolve, reject) => {
-        document.getElementById("searchButton").classList.add("skeleton")
-        document.getElementById("searchButton").style.color = "#22242f"
+        addSearchButtonSkeleton()
         lookUpWs(id)
     })
-}
-
-function lookUpId(id) {
-  return new Promise((resolve, reject) => {
-    document.getElementById("searchButton").classList.add("skeleton")
-    document.getElementById("searchButton").style.color = "#22242f"
-    lookUp(id).then(res => {
-      renderPartialBookBreadcrumb(res)
-      removeSearchButtonSkeleton()
-    }, (err) => {
-      console.error(err)
-      removeSearchButtonSkeleton()
-    })
-  })
 }
 
 document.getElementById("clearButton").addEventListener("click", (ev) => {
@@ -276,6 +261,12 @@ function getMessageType(messageObj) {
     console.error("Cant determine message type")
     return ""
 }
+
+function addSearchButtonSkeleton() {
+  document.getElementById("searchButton").classList.add("skeleton")
+  document.getElementById("searchButton").style.color = "#22242f"
+}
+
 
 function removeSearchButtonSkeleton() {
   document.getElementById("searchButton").classList.remove("skeleton")
