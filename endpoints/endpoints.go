@@ -73,6 +73,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 // }
 
 func WsEndpoint(w http.ResponseWriter, r *http.Request) {
+	logger.Sugar().Info("Initiated new ws connection")
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ctx := context.Background()
 
@@ -88,6 +89,7 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logger.Sugar().Infof("Read to read first message")
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		logger.Warn(err.Error())
@@ -98,6 +100,7 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Warn(err.Error())
 	}
+	logger.Sugar().Infof("lookup request was: %+v", lookUpRequest)
 
 	ctx = context.WithValue(ctx, "requestId", lookUpRequest.ID)
 	ctx = context.WithValue(ctx, "bookId", lookUpRequest.BookId)

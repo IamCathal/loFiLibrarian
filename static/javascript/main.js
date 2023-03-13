@@ -62,7 +62,6 @@ function tryToDetectISBN() {
                 bookWasFoundDontScanAgainInInterval = false
               }, 500)
             }
-          
           }
         })
         .catch((err) => {
