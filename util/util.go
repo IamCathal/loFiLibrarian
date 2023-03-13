@@ -28,6 +28,7 @@ func WriteWsMessage(ctx context.Context, msg string) {
 	if err := ws.WriteJSON(wsMessage); err != nil {
 		logger.Sugar().Panicf("failed to write msg '%s' to websocket: %+v", msg, err)
 	}
+	logger.Sugar().Infof("Write partial ws message: %+v", wsMessage)
 }
 
 func WriteWsPartialBookInfo(ctx context.Context, bookInfo dtos.BookBreadcrumb) {
@@ -41,6 +42,7 @@ func WriteWsPartialBookInfo(ctx context.Context, bookInfo dtos.BookBreadcrumb) {
 	if err := ws.WriteJSON(wsMessage); err != nil {
 		logger.Sugar().Panicf("failed to write bookInfo for '%s' to websocket: %+v", bookInfo.Title, err)
 	}
+	logger.Sugar().Infof("Write partial book info message: %+v", wsMessage)
 }
 
 func WriteWsError(ctx context.Context, message string) {
@@ -53,4 +55,5 @@ func WriteWsError(ctx context.Context, message string) {
 	if err := ws.WriteJSON(wsMessage); err != nil {
 		logger.Sugar().Panicf("failed to write errorMessage '%s' to websocket: %+v", message, err)
 	}
+	logger.Sugar().Infof("Write error ws message: %+v", wsMessage)
 }

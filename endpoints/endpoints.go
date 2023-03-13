@@ -43,7 +43,7 @@ func SetupRouter() *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", index).Methods("GET")
 	r.HandleFunc("/status", status).Methods("POST")
-	r.HandleFunc("/lookup", lookUp).Methods("GET")
+	// r.HandleFunc("/lookup", lookUp).Methods("GET")
 	r.HandleFunc("/lookupws", WsEndpoint).Methods("GET")
 	// r.Use(logMiddleware)
 
@@ -60,17 +60,17 @@ func index(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/index.html")
 }
 
-func lookUp(w http.ResponseWriter, r *http.Request) {
-	ID := r.URL.Query().Get("id")
-	if isValid := isValidInt(ID); !isValid {
-		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
-		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
-		return
-	}
-	bookInfo := goodreads.GetBookDetails(ID)
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(bookInfo)
-}
+// func lookUp(w http.ResponseWriter, r *http.Request) {
+// 	ID := r.URL.Query().Get("id")
+// 	if isValid := isValidInt(ID); !isValid {
+// 		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
+// 		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
+// 		return
+// 	}
+// 	bookInfo := goodreads.GetBookDetails(ID)
+// 	w.WriteHeader(http.StatusOK)
+// 	json.NewEncoder(w).Encode(bookInfo)
+// }
 
 func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
@@ -93,7 +93,6 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 		logger.Warn(err.Error())
 	}
 
-	fmt.Printf("Got message: %s\n", string(msg))
 	lookUpRequest := dtos.InitLookupDto{}
 	err = json.Unmarshal(msg, &lookUpRequest)
 	if err != nil {
@@ -111,6 +110,7 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logger.Sugar().Infof("Processing request to lookup ISBN: %s", lookUpRequest.BookId)
 	util.WriteWsMessage(ctx, fmt.Sprintf("Looking up book %s", lookUpRequest.BookId))
 
 	goodreads.GetBookDetailsWs(ctx, lookUpRequest.BookId)
