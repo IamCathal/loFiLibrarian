@@ -2,8 +2,7 @@ version: '3.2'
 
 services:
   lofilibrarian:
-    build:
-      context: .
+    image: ghcr.io/iamcathal/lofilibrarian:latest
     container_name: lofilibrarian
     volumes:
       - ./logs/:/logs/

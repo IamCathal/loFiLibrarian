@@ -1,5 +1,3 @@
-
-# builder image
 FROM golang:1.19.2-alpine as builder
 RUN mkdir /build
 COPY . /build/
