@@ -198,7 +198,7 @@ function clearBooks() {
 
 function lookUpWs(bookId) {
     const startTime = new Date()
-    const socket = new WebSocket(`ws://localhost:2946/lookupws`);
+    const socket = new WebSocket(`wss://${getCurrentHostname()}/lookupws`);
     socket.onopen = function(ev) {
       const lookUpRequest = {
         "id": crypto.randomUUID(),
@@ -330,4 +330,8 @@ function timeSince(targetDate) {
 
 function timeTakenString(timeTakenMs) {
   return timeTakenMs >= 1000 ? `${timeTakenMs/1000}s` : `${timeTakenMs}ms`
+}
+
+function getCurrentHostname() {
+  return new URL(window.location.href).host
 }
