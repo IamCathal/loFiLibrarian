@@ -73,7 +73,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 // }
 
 func WsEndpoint(w http.ResponseWriter, r *http.Request) {
-	logger.Sugar().Info("Initiated new ws connection")
+	startTime := time.Now().UnixMilli()
+	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", r.RemoteAddr, r.Header["User-Agent"])
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ctx := context.Background()
 
@@ -82,14 +83,16 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 		if _, ok := err.(websocket.HandshakeError); !ok {
 			logger.Sugar().Warnf("error upgrading websocket connection (handshake error): %+v", err)
 			SendBasicInvalidResponse(w, r, "unable to upgrade websocket", http.StatusBadRequest)
+			ws.Close()
 			return
 		}
 		logger.Sugar().Warnf("error upgrading websocket connection: %+v", err)
 		SendBasicInvalidResponse(w, r, "unable to upgrade websocket", http.StatusBadRequest)
+		ws.Close()
 		return
 	}
+	defer ws.Close()
 
-	logger.Sugar().Infof("Read to read first message")
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		logger.Warn(err.Error())
@@ -98,29 +101,31 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	lookUpRequest := dtos.InitLookupDto{}
 	err = json.Unmarshal(msg, &lookUpRequest)
 	if err != nil {
-		logger.Warn(err.Error())
+		util.WriteWsError(ctx, "Invalid lookup request given")
+		return
 	}
-	logger.Sugar().Infof("lookup request was: %+v", lookUpRequest)
+	logger.Sugar().Infof("Lookup request was: %+v", lookUpRequest)
 
-	ctx = context.WithValue(ctx, "requestId", lookUpRequest.ID)
-	ctx = context.WithValue(ctx, "bookId", lookUpRequest.BookId)
-	ctx = context.WithValue(ctx, "ws", ws)
+	ctx = context.WithValue(ctx, util.REQUEST_ID, lookUpRequest.ID)
+	ctx = context.WithValue(ctx, util.BOOK_ID, lookUpRequest.BookId)
+	ctx = context.WithValue(ctx, util.WS, ws)
 
 	if isValid := isValidInt(lookUpRequest.BookId); !isValid {
 		errorMsg := fmt.Sprintf("Invalid id '%s' given", lookUpRequest.BookId)
 		util.WriteWsError(ctx, errorMsg)
-		ws.Close()
 		return
 	}
 
-	logger.Sugar().Infof("Processing request to lookup ISBN: %s", lookUpRequest.BookId)
-	util.WriteWsMessage(ctx, fmt.Sprintf("Looking up book %s", lookUpRequest.BookId))
+	util.WriteWsMessage(ctx, fmt.Sprintf("Processing request to lookup ISBN: %s", lookUpRequest.BookId))
 
-	goodreads.GetBookDetailsWs(ctx, lookUpRequest.BookId)
+	_, err = goodreads.GetBookDetailsWs(ctx, lookUpRequest.BookId)
+	if err != nil {
+		logger.Sugar().Errorf("Error getting book details: %v", err)
+		util.WriteWsError(ctx, "error getting book details")
+		return
+	}
 
-	// ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(PING_TIMEOUT_WAIT))
-
-	ws.Close()
+	logger.Sugar().Infof("Completed book search in %vms", time.Now().UnixMilli()-startTime)
 }
 
 // func WsLookUp(w http.ResponseWriter, r *http.Request) {

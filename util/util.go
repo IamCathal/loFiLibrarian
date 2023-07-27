@@ -13,16 +13,25 @@ var (
 	logger *zap.Logger
 )
 
+type ctxKey int
+
+const (
+	REQUEST_ID ctxKey = iota
+	BOOK_ID    ctxKey = iota
+	TIME_TAKEN ctxKey = iota
+	WS         ctxKey = iota
+)
+
 func SetLogger(newLogger *zap.Logger) {
 	logger = newLogger
 }
 
 func WriteWsMessage(ctx context.Context, msg string) {
-	ws := ctx.Value("ws").(*websocket.Conn)
+	ws := ctx.Value(WS).(*websocket.Conn)
 	wsMessage := dtos.WsMessage{
 		Timestamp: time.Now().UnixMilli(),
-		ID:        ctx.Value("requestId").(string),
-		BookId:    ctx.Value("bookId").(string),
+		ID:        ctx.Value(REQUEST_ID).(string),
+		BookId:    ctx.Value(BOOK_ID).(string),
 		Msg:       msg,
 	}
 	if err := ws.WriteJSON(wsMessage); err != nil {
@@ -31,25 +40,24 @@ func WriteWsMessage(ctx context.Context, msg string) {
 	logger.Sugar().Infof("Write partial ws message: %+v", wsMessage)
 }
 
-func WriteWsPartialBookInfo(ctx context.Context, bookInfo dtos.BookBreadcrumb) {
-	ws := ctx.Value("ws").(*websocket.Conn)
+func WriteBookDetailsBreadcrumb(ctx context.Context, bookBreadcrumb dtos.BookBreadcrumb) {
+	ws := ctx.Value(WS).(*websocket.Conn)
 	wsMessage := dtos.WsBookInfo{
 		Timestamp: time.Now().UnixMilli(),
-		ID:        ctx.Value("requestId").(string),
-		TimeTaken: ctx.Value("timeTaken").(int64),
-		BookInfo:  bookInfo,
+		ID:        ctx.Value(REQUEST_ID).(string),
+		TimeTaken: ctx.Value(TIME_TAKEN).(int64),
+		BookInfo:  bookBreadcrumb,
 	}
 	if err := ws.WriteJSON(wsMessage); err != nil {
-		logger.Sugar().Panicf("failed to write bookInfo for '%s' to websocket: %+v", bookInfo.Title, err)
+		logger.Sugar().Panicf("failed to write bookBreadcrumb for '%s' to websocket: %+v", bookBreadcrumb.ISBN, err)
 	}
-	logger.Sugar().Infof("Write partial book info message: %+v", wsMessage)
 }
 
 func WriteWsError(ctx context.Context, message string) {
-	ws := ctx.Value("ws").(*websocket.Conn)
+	ws := ctx.Value(WS).(*websocket.Conn)
 	wsMessage := dtos.WsError{
 		Timestamp:    time.Now().UnixMilli(),
-		ID:           ctx.Value("requestId").(string),
+		ID:           ctx.Value(REQUEST_ID).(string),
 		ErrorMessage: message,
 	}
 	if err := ws.WriteJSON(wsMessage); err != nil {

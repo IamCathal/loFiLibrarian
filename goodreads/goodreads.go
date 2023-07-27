@@ -23,22 +23,30 @@ func SetLogger(newLogger *zap.Logger) {
 	logger = newLogger
 }
 
-func GetBookDetailsWs(ctx context.Context, ID string) dtos.BookBreadcrumb {
+func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, error) {
 	startTime := time.Now().UnixMilli()
-	logger.Sugar().Infof("Retrieving book details for ID: %s", ID)
 	body := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
-	bodyBtytes, err := io.ReadAll(body)
-	checkErr(err)
+	bodyBytes, err := io.ReadAll(body)
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
 
 	booksFoundRes := []dtos.GoodReadsSearchBookResult{}
-	err = json.Unmarshal(bodyBtytes, &booksFoundRes)
-	checkErr(err)
-
-	if len(booksFoundRes) == 0 {
-		logger.Sugar().Infof("No books found for ID: %s", ID)
-		return dtos.BookBreadcrumb{}
+	err = json.Unmarshal(bodyBytes, &booksFoundRes)
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
 	}
+
+	logger.Sugar().Infof("%d books were found for ID: %s", len(booksFoundRes), ID)
+	if len(booksFoundRes) == 0 {
+		return dtos.BookBreadcrumb{}, nil
+	}
+
 	book := booksFoundRes[0]
+	floatRating, err := strToFloat(book.AvgRating)
+	if err != nil || len(booksFoundRes) == 0 {
+		return dtos.BookBreadcrumb{}, err
+	}
 	partialBookBreadcrumb := dtos.BookBreadcrumb{
 		Title:        book.BookTitleBare,
 		Author:       book.Author.Name,
@@ -47,26 +55,31 @@ func GetBookDetailsWs(ctx context.Context, ID string) dtos.BookBreadcrumb {
 		OtherCovers:  []string{},
 		Pages:        book.NumPages,
 		Link:         book.Description.FullContentURL,
-		Rating:       strToFloat(book.AvgRating),
+		Rating:       floatRating,
 		RatingsCount: book.RatingsCount,
 		Genres:       []string{},
 		ISBN:         ID,
 	}
 
-	ctx = context.WithValue(ctx, "timeTaken", time.Now().UnixMilli()-startTime)
-	util.WriteWsPartialBookInfo(ctx, partialBookBreadcrumb)
-	logger.Sugar().Infof("%d books were found for ID: %s at %s", len(booksFoundRes), ID, booksFoundRes[0].Description.FullContentURL)
+	ctx = context.WithValue(ctx, util.TIME_TAKEN, time.Now().UnixMilli()-startTime)
+	util.WriteBookDetailsBreadcrumb(ctx, partialBookBreadcrumb)
 
 	return lookUpGoodReadsPageForBook(ctx, book.Description.FullContentURL)
 }
 
-func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) dtos.BookBreadcrumb {
+func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.BookBreadcrumb, error) {
 	startTime := time.Now().UnixMilli()
-	fullBookInfo := extractBookInfo(ctx, bookPageURL)
-	fullBookInfo.ISBN = ctx.Value("bookId").(string)
-	ctx = context.WithValue(ctx, "timeTaken", time.Now().UnixMilli()-startTime)
-	util.WriteWsPartialBookInfo(ctx, fullBookInfo)
-	return fullBookInfo
+
+	fullBookInfo, err := extractBookInfo(ctx, bookPageURL)
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
+	fullBookInfo.ISBN = ctx.Value(util.BOOK_ID).(string)
+
+	ctx = context.WithValue(ctx, util.TIME_TAKEN, time.Now().UnixMilli()-startTime)
+	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo)
+
+	return fullBookInfo, nil
 }
 
 // func GetBookDetails(ID string) dtos.BookBreadcrumb {
@@ -87,8 +100,8 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) dtos.Bo
 // 	return extractBookInfo(booksFoundRes[0].Description.FullContentURL)
 // }
 
-func extractBookInfo(ctx context.Context, bookPage string) dtos.BookBreadcrumb {
-	logger.Sugar().Infof("Retrieving GoodReads page for ISBN: %s", ctx.Value("bookId").(string))
+func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb, error) {
+	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(util.BOOK_ID).(string), bookPage)
 	doc, err := goquery.NewDocumentFromReader(getPage(bookPage))
 	checkErr(err)
 
@@ -98,16 +111,24 @@ func extractBookInfo(ctx context.Context, bookPage string) dtos.BookBreadcrumb {
 	bookInfo.Author = strings.TrimSpace(doc.Find(".ContributorLinksList > span:nth-child(1) > a:nth-child(1) > span:nth-child(1)").Text())
 	bookInfo.Series = strings.TrimSpace(doc.Find("h3.Text__italic > a:nth-child(1)").Text())
 	bookInfo.MainCover, _ = doc.Find("div.BookCard__clickCardTarget > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)").Attr("src")
-	bookInfo.OtherCovers = extractOtherCovers(doc)
-	bookInfo.Pages = extractIntPages(strings.TrimSpace(doc.Find(".FeaturedDetails > p:nth-child(1)").Text()))
-	bookInfo.Link = bookPage
-	bookInfo.Rating = strToFloat(stripOfFormatting(doc.Find("a.RatingStatistics > div:nth-child(1) > div:nth-child(2)").Text()))
 	ratingsCountStr := doc.Find("a.RatingStatistics > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)").Text()
-	bookInfo.RatingsCount = getRatingsCount(ratingsCountStr)
+	bookInfo.OtherCovers = extractOtherCovers(doc)
 	bookInfo.Genres = extractGenres(doc)
+	bookInfo.Pages, err = extractIntPages(strings.TrimSpace(doc.Find(".FeaturedDetails > p:nth-child(1)").Text()))
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
+	bookInfo.Rating, err = strToFloat(stripOfFormatting(doc.Find("a.RatingStatistics > div:nth-child(1) > div:nth-child(2)").Text()))
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
+	bookInfo.RatingsCount, err = getRatingsCount(ratingsCountStr)
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
 
-	logger.Sugar().Infof("Extracted all details for ISBN: %s, %+v", ctx.Value("bookId").(string), getConciseBookInfoFromBreadCrumb(bookInfo))
-	return bookInfo
+	logger.Sugar().Infof("Extracted all details for bookId %s: %+v", ctx.Value(util.BOOK_ID).(string), getConciseBookInfoFromBreadCrumb(bookInfo))
+	return bookInfo, err
 }
 
 func getPage(pageURL string) io.ReadCloser {
