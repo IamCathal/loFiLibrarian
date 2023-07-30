@@ -182,7 +182,7 @@ function clearBooks() {
 
 function lookUpWs(bookId) {
     const startTime = new Date()
-    const socket = new WebSocket(`wss://${getCurrentHostname()}/lookupws`);
+    const socket = new WebSocket(`wss://${getCurrentHostname()}/ws/lookup`);
     socket.onopen = function(ev) {
       const lookUpRequest = {
         "id": crypto.randomUUID(),
@@ -200,7 +200,7 @@ function lookUpWs(bookId) {
       console.log(`Latency is ${timeSince(new Date(response.time))}`)
       console.log(response)
 
-      switch (getMessageType(response)) {
+      switch (response.type) {
         case "message":
             console.log("Message type")
             console.log(response.msg)
@@ -216,12 +216,13 @@ function lookUpWs(bookId) {
               renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
             }
             break
+
         case "error":
             document.getElementById("bookInfoDiv").innerHTML = response.errorMessage
             break
 
         default:
-          console.error("no type")
+          console.error("no type given")
       }
     }
 
@@ -231,35 +232,7 @@ function lookUpWs(bookId) {
     }
 }
 
-function lookUp(bookID) {
-  return new Promise((resolve, reject) => {
-    fetch(`/lookup?id=${bookID}`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-    }).then((res) => res.json())
-    .then((res) => {
-        resolve(res)
-    }, (err) => {
-        reject(err)
-    });
-  })
-}
 
-function getMessageType(messageObj) {
-    if (messageObj.msg != undefined) {
-      return "message"
-    } else if (messageObj.bookInfo != undefined) {
-      return "bookInfo"
-    } else if (messageObj.errormessage != undefined) {
-      return "error"
-    }
-
-    console.error("Cant determine message type")
-    return ""
-}
 
 function addSearchButtonSkeleton() {
   document.getElementById("searchButton").classList.add("skeleton")

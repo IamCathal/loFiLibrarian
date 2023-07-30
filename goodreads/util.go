@@ -66,7 +66,7 @@ func getFakeReferrerPage(URL string) string {
 func extractIntPages(pagesString string) (int, error) {
 	extractedNumbers := ONLY_NUMBERS.FindAllString(pagesString, 2)
 	if len(extractedNumbers) != 1 {
-		return 0, fmt.Errorf("Failed to extract one numbers from pagesString '%s'", pagesString)
+		return 0, fmt.Errorf("failed to extract one numbers from pagesString '%s'", pagesString)
 	}
 	return strToInt(extractedNumbers[0])
 }

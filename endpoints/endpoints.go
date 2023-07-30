@@ -43,12 +43,12 @@ func SetupRouter() *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", index).Methods("GET")
 	r.HandleFunc("/status", status).Methods("POST")
+	r.HandleFunc("/lookup", lookUp).Methods("GET")
 	// r.HandleFunc("/lookup", lookUp).Methods("GET")
-	r.HandleFunc("/lookupws", WsEndpoint).Methods("GET")
 	// r.Use(logMiddleware)
 
 	wsRouter := r.Path("/ws").Subrouter()
-	wsRouter.HandleFunc("/lookup", WsEndpoint).Methods("GET")
+	wsRouter.HandleFunc("/lookup", wsLookUp).Methods("GET")
 
 	r.Handle("/static", http.NotFoundHandler())
 	fs := http.FileServer(http.Dir(""))
@@ -60,19 +60,36 @@ func index(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/index.html")
 }
 
-// func lookUp(w http.ResponseWriter, r *http.Request) {
-// 	ID := r.URL.Query().Get("id")
-// 	if isValid := isValidInt(ID); !isValid {
-// 		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
-// 		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
-// 		return
-// 	}
-// 	bookInfo := goodreads.GetBookDetails(ID)
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(bookInfo)
-// }
+func lookUp(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 
-func WsEndpoint(w http.ResponseWriter, r *http.Request) {
+	ID := r.URL.Query().Get("id")
+	if isValid := isValidInt(ID); !isValid {
+		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
+		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
+		return
+	}
+	ctx = context.WithValue(ctx, dtos.REQUEST_ID, "manualId")
+	ctx = context.WithValue(ctx, dtos.BOOK_ID, ID)
+
+	if isValid := isValidInt(ID); !isValid {
+		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
+		util.WriteWsError(ctx, errorMsg)
+		return
+	}
+
+	bookDetails, err := goodreads.GetBookDetailsWs(ctx, ID)
+	if err != nil {
+		logger.Sugar().Errorf("Error getting book details: %v", err)
+		util.WriteWsError(ctx, "error getting book details")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(bookDetails)
+}
+
+func wsLookUp(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now().UnixMilli()
 	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", r.RemoteAddr, r.Header["User-Agent"])
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
@@ -106,9 +123,9 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.Sugar().Infof("Lookup request was: %+v", lookUpRequest)
 
-	ctx = context.WithValue(ctx, util.REQUEST_ID, lookUpRequest.ID)
-	ctx = context.WithValue(ctx, util.BOOK_ID, lookUpRequest.BookId)
-	ctx = context.WithValue(ctx, util.WS, ws)
+	ctx = context.WithValue(ctx, dtos.REQUEST_ID, lookUpRequest.ID)
+	ctx = context.WithValue(ctx, dtos.BOOK_ID, lookUpRequest.BookId)
+	ctx = context.WithValue(ctx, dtos.WS, ws)
 
 	if isValid := isValidInt(lookUpRequest.BookId); !isValid {
 		errorMsg := fmt.Sprintf("Invalid id '%s' given", lookUpRequest.BookId)
@@ -127,34 +144,6 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	logger.Sugar().Infof("Completed book search in %vms", time.Now().UnixMilli()-startTime)
 }
-
-// func WsLookUp(w http.ResponseWriter, r *http.Request) {
-// 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
-// 	ws, err := upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		if _, ok := err.(websocket.HandshakeError); !ok {
-// 			logger.Sugar().Warnf("error upgrading websocket connection (handshake error): %+v", err)
-// 			SendBasicInvalidResponse(w, r, "unable to upgrade websocket", http.StatusBadRequest)
-// 			return
-// 		}
-// 		logger.Sugar().Warnf("error upgrading websocket connection: %+v", err)
-// 		SendBasicInvalidResponse(w, r, "unable to upgrade websocket", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	ID := r.URL.Query().Get("id")
-// 	if isValid := isValidInt(ID); !isValid {
-// 		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
-// 		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	util.WriteWsMessage(ws, fmt.Sprintf("Looking up book %s", ID))
-
-// 	goodreads.GetBookDetailsWs(ws, ID)
-
-// }
 
 func status(w http.ResponseWriter, r *http.Request) {
 	req := dtos.UptimeResponse{

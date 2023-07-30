@@ -2,6 +2,15 @@ package dtos
 
 import "time"
 
+type ctxKey int
+
+const (
+	REQUEST_ID ctxKey = iota
+	BOOK_ID    ctxKey = iota
+	TIME_TAKEN ctxKey = iota
+	WS         ctxKey = iota
+)
+
 type AppConfig struct {
 	ApplicationStartUpTime time.Time
 }
@@ -59,27 +68,40 @@ type GoodReadsDescription struct {
 	FullContentURL string `json:"fullContentUrl"`
 }
 
-type WsMessage struct {
-	Timestamp int64  `json:"time"`
-	ID        string `json:"id"`
-	BookId    string `json:"bookId"`
-	Msg       string `json:"msg"`
-}
-
-type WsBookInfo struct {
-	Timestamp int64          `json:"time"`
-	ID        string         `json:"id"`
-	TimeTaken int64          `json:"timeTaken"`
-	BookInfo  BookBreadcrumb `json:"bookInfo"`
-}
-
-type WsError struct {
-	Timestamp    int64  `json:"time"`
-	ID           string `json:"id"`
-	ErrorMessage string `json:"errorMessage"`
-}
-
 type InitLookupDto struct {
 	ID     string `json:"id"`
 	BookId string `json:"bookId"`
+}
+
+// .
+// Websocket message DTOs
+// .
+
+type wsMessage struct {
+	Type string `json:"type"`
+	Msg  string `json:"msg"`
+
+	Timestamp int64  `json:"time"`
+	ID        string `json:"id"`
+	BookId    string `json:"bookId"`
+}
+
+type wsBookInfo struct {
+	Type     string         `json:"type"`
+	BookInfo BookBreadcrumb `json:"bookInfo"`
+
+	Timestamp int64  `json:"time"`
+	ID        string `json:"id"`
+	BookId    string `json:"bookId"`
+	TimeTaken int64  `json:"timeTaken"`
+}
+
+type wsError struct {
+	Type         string `json:"type"`
+	ErrorMessage string `json:"errorMessage"`
+
+	Timestamp int64  `json:"time"`
+	ID        string `json:"id"`
+	BookId    string `json:"bookId"`
+	TimeTaken int64  `json:"timeTaken"`
 }

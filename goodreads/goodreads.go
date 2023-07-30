@@ -61,7 +61,7 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 		ISBN:         ID,
 	}
 
-	ctx = context.WithValue(ctx, util.TIME_TAKEN, time.Now().UnixMilli()-startTime)
+	ctx = context.WithValue(ctx, dtos.TIME_TAKEN, time.Now().UnixMilli()-startTime)
 	util.WriteBookDetailsBreadcrumb(ctx, partialBookBreadcrumb)
 
 	return lookUpGoodReadsPageForBook(ctx, book.Description.FullContentURL)
@@ -74,9 +74,9 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 	if err != nil {
 		return dtos.BookBreadcrumb{}, err
 	}
-	fullBookInfo.ISBN = ctx.Value(util.BOOK_ID).(string)
+	fullBookInfo.ISBN = ctx.Value(dtos.BOOK_ID).(string)
 
-	ctx = context.WithValue(ctx, util.TIME_TAKEN, time.Now().UnixMilli()-startTime)
+	ctx = context.WithValue(ctx, dtos.TIME_TAKEN, time.Now().UnixMilli()-startTime)
 	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo)
 
 	return fullBookInfo, nil
@@ -101,7 +101,7 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 // }
 
 func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb, error) {
-	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(util.BOOK_ID).(string), bookPage)
+	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(dtos.BOOK_ID).(string), bookPage)
 	doc, err := goquery.NewDocumentFromReader(getPage(bookPage))
 	checkErr(err)
 
@@ -127,7 +127,7 @@ func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb,
 		return dtos.BookBreadcrumb{}, err
 	}
 
-	logger.Sugar().Infof("Extracted all details for bookId %s: %+v", ctx.Value(util.BOOK_ID).(string), getConciseBookInfoFromBreadCrumb(bookInfo))
+	logger.Sugar().Infof("Extracted all details for bookId %s: %+v", ctx.Value(dtos.BOOK_ID).(string), getConciseBookInfoFromBreadCrumb(bookInfo))
 	return bookInfo, err
 }
 
