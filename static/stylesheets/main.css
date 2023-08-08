@@ -138,3 +138,12 @@ input[type=number] {
 .redErrorText {
   color: #a41515;
 }
+
+.statsMainText {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.statsSubText {
+  font-size: 0.6em;
+}

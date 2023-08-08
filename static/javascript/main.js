@@ -4,6 +4,41 @@ let lastFoundBookID;
 var barcodeDetector;
 
 try {
+    const socket = new WebSocket(`ws://${getCurrentHostname()}/livestatus`);
+    socket.onopen = function(ev) {
+      console.log("Opened heartbeat ws connection")
+    }
+
+    let last20Latencies = []
+
+    socket.onmessage = function(ev) {
+      const response = JSON.parse(ev.data)
+      
+      // TODO change this latency to be only the MS difference
+      const latency = timeSince(new Date(response.serverSentTime))
+      const uptime = timeSince(new Date(response.serverStartupTime))
+
+      if (last20Latencies.length > 20) {
+        last20Latencies = last20Latencies.slice(-1)
+      }
+
+      latencyPureNumber = parseInt(latency.replace(/[^0-9]+/g, ""))
+      last20Latencies.push(latencyPureNumber)
+      console.log(last20Latencies)
+
+      document.getElementById("currPing").textContent = timeSince(new Date(response.serverSentTime))
+      document.getElementById("uptime").textContent = uptime
+      document.getElementById("avgPing").textContent = Math.round(getAvgPing(last20Latencies))
+    }
+
+    socket.onclose = function(ev) {
+      console.log("Closed heartbeat ws connection")
+    }
+} catch (error) {
+  console.error(error)
+}
+
+try {
   barcodeDetector = new BarcodeDetector();
 } catch (error) {
   console.log("Barcode detection is not supported by your browser. See https://developer.mozilla.org/en-US/docs/Web/API/Barcode_Detection_API#browser_compatibility for support details")
@@ -308,4 +343,12 @@ function timeTakenString(timeTakenMs) {
 
 function getCurrentHostname() {
   return new URL(window.location.href).host
+}
+
+function getAvgPing(latencies) {
+  let total = 0
+  for (let i = 0; i < latencies.length; i++) {
+    total+= latencies[i]
+  }
+  return total / latencies.length
 }

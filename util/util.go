@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/iamcathal/lofilibrarian/dtos"
@@ -51,4 +52,19 @@ func WriteWsError(ctx context.Context, message string) {
 	}
 
 	logger.Sugar().Infof("Write error ws message: %+v", wsError)
+}
+
+func WriteWsLiveStatus(ctx context.Context, appStartTime time.Time) {
+	if ctx.Value(dtos.WS) == nil {
+		logger.Info("No websocket connection present, skipped write message")
+		return
+	}
+	ws := ctx.Value(dtos.WS).(*websocket.Conn)
+
+	wsLiveStatus := dtos.NewWsLiveStatus(appStartTime)
+	if err := ws.WriteJSON(wsLiveStatus); err != nil {
+		logger.Sugar().Panicf("failed to write wsLiveStatus '%s' to websocket: %+v", wsLiveStatus, err)
+	}
+
+	logger.Sugar().Infof("Write live status ws message: %+v", wsLiveStatus)
 }

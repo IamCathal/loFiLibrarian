@@ -45,3 +45,11 @@ func NewWsError(ctx context.Context, msg string) wsError {
 		TimeTaken: ctx.Value(TIME_TAKEN).(int64),
 	}
 }
+
+func NewWsLiveStatus(appStartTime time.Time) WsLiveStatus {
+	return WsLiveStatus{
+		Type:              "liveStatus",
+		ServerSentTime:    time.Now().UnixMilli(),
+		ServerStartupTime: appStartTime.UnixMilli(),
+	}
+}

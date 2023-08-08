@@ -42,9 +42,10 @@ func InitInfluxClient(client influxdb2.Client) {
 func SetupRouter() *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", index).Methods("GET")
-	r.HandleFunc("/status", status).Methods("POST")
+	r.HandleFunc("/status", status).Methods("GET")
 	// r.HandleFunc("/lookup", lookUp).Methods("GET")
 	r.HandleFunc("/eee", wsLookUp).Methods("GET")
+	r.HandleFunc("/livestatus", liveStatus).Methods("GET")
 	// r.HandleFunc("/lookup", lookUp).Methods("GET")
 	// r.Use(logMiddleware)
 
@@ -148,6 +149,35 @@ func wsLookUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.Sugar().Infof("Completed book search in %vms", time.Now().UnixMilli()-startTime)
+}
+
+func liveStatus(w http.ResponseWriter, r *http.Request) {
+	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", r.RemoteAddr, r.Header["User-Agent"])
+
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	ctx := context.Background()
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		if _, ok := err.(websocket.HandshakeError); !ok {
+			logger.Sugar().Warnf("error upgrading websocket connection (handshake error): %+v", err)
+			SendBasicInvalidResponse(w, r, "unable to upgrade websocket", http.StatusBadRequest)
+			ws.Close()
+			return
+		}
+		logger.Sugar().Warnf("error upgrading websocket connection: %+v", err)
+		SendBasicInvalidResponse(w, r, "unable to upgrade websocket", http.StatusBadRequest)
+		ws.Close()
+		return
+	}
+	defer ws.Close()
+
+	ctx = context.WithValue(ctx, dtos.WS, ws)
+
+	for {
+		util.WriteWsLiveStatus(ctx, appConfig.ApplicationStartUpTime)
+		time.Sleep(2 * time.Second)
+	}
 }
 
 func status(w http.ResponseWriter, r *http.Request) {

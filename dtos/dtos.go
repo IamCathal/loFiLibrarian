@@ -106,3 +106,9 @@ type wsError struct {
 	BookId    string `json:"bookId"`
 	TimeTaken int64  `json:"timeTaken"`
 }
+
+type WsLiveStatus struct {
+	Type              string `json:"type"`
+	ServerSentTime    int64  `json:"serverSentTime"`
+	ServerStartupTime int64  `json:"serverStartupTime,omitempty"`
+}
