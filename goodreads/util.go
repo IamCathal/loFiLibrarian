@@ -48,6 +48,9 @@ func strToInt(str string) (int, error) {
 func strToFloat(floatString string) (float64, error) {
 	floatVal, err := strconv.ParseFloat(floatString, 64)
 	if err != nil {
+		if floatString == "" {
+			floatString = "(empty)"
+		}
 		return 0, fmt.Errorf("failed parse float from string '%s': %w", floatString, err)
 	}
 	return floatVal, nil
@@ -66,7 +69,7 @@ func getFakeReferrerPage(URL string) string {
 func extractIntPages(pagesString string) (int, error) {
 	extractedNumbers := ONLY_NUMBERS.FindAllString(pagesString, 2)
 	if len(extractedNumbers) != 1 {
-		return 0, fmt.Errorf("failed to extract one numbers from pagesString '%s'", pagesString)
+		return 0, fmt.Errorf("failed to extract only numbers from pagesString '%s'", pagesString)
 	}
 	return strToInt(extractedNumbers[0])
 }

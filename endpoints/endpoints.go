@@ -43,7 +43,8 @@ func SetupRouter() *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", index).Methods("GET")
 	r.HandleFunc("/status", status).Methods("POST")
-	r.HandleFunc("/lookup", lookUp).Methods("GET")
+	// r.HandleFunc("/lookup", lookUp).Methods("GET")
+	r.HandleFunc("/eee", wsLookUp).Methods("GET")
 	// r.HandleFunc("/lookup", lookUp).Methods("GET")
 	// r.Use(logMiddleware)
 
@@ -60,34 +61,36 @@ func index(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/index.html")
 }
 
-func lookUp(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+// func lookUp(w http.ResponseWriter, r *http.Request) {
+// 	ctx := context.Background()
+// 	startTime := time.Now().UnixMilli()
 
-	ID := r.URL.Query().Get("id")
-	if isValid := isValidInt(ID); !isValid {
-		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
-		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
-		return
-	}
-	ctx = context.WithValue(ctx, dtos.REQUEST_ID, "manualId")
-	ctx = context.WithValue(ctx, dtos.BOOK_ID, ID)
+// 	ID := r.URL.Query().Get("id")
+// 	if isValid := isValidInt(ID); !isValid {
+// 		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
+// 		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
+// 		return
+// 	}
+// 	ctx = context.WithValue(ctx, dtos.REQUEST_ID, "manualId")
+// 	ctx = context.WithValue(ctx, dtos.BOOK_ID, ID)
+// 	ctx = context.WithValue(ctx, dtos.START_TIME, startTime)
 
-	if isValid := isValidInt(ID); !isValid {
-		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
-		util.WriteWsError(ctx, errorMsg)
-		return
-	}
+// 	if isValid := isValidInt(ID); !isValid {
+// 		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
+// 		util.WriteWsError(ctx, errorMsg)
+// 		return
+// 	}
 
-	bookDetails, err := goodreads.GetBookDetailsWs(ctx, ID)
-	if err != nil {
-		logger.Sugar().Errorf("Error getting book details: %v", err)
-		util.WriteWsError(ctx, "error getting book details")
-		return
-	}
+// 	bookDetails, err := goodreads.GetBookDetailsWs(ctx, ID)
+// 	if err != nil {
+// 		logger.Sugar().Errorf("Error getting book details: %v", err)
+// 		util.WriteWsError(ctx, "error getting book details")
+// 		return
+// 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(bookDetails)
-}
+// 	w.WriteHeader(http.StatusOK)
+// 	json.NewEncoder(w).Encode(bookDetails)
+// }
 
 func wsLookUp(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now().UnixMilli()
@@ -123,6 +126,7 @@ func wsLookUp(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.Sugar().Infof("Lookup request was: %+v", lookUpRequest)
 
+	ctx = context.WithValue(ctx, dtos.START_TIME, startTime)
 	ctx = context.WithValue(ctx, dtos.REQUEST_ID, lookUpRequest.ID)
 	ctx = context.WithValue(ctx, dtos.BOOK_ID, lookUpRequest.BookId)
 	ctx = context.WithValue(ctx, dtos.WS, ws)
@@ -137,8 +141,9 @@ func wsLookUp(w http.ResponseWriter, r *http.Request) {
 
 	_, err = goodreads.GetBookDetailsWs(ctx, lookUpRequest.BookId)
 	if err != nil {
-		logger.Sugar().Errorf("Error getting book details: %v", err)
-		util.WriteWsError(ctx, "error getting book details")
+		errorMessage := fmt.Sprintf("Error getting book details: %v", err)
+		logger.Sugar().Error(errorMessage)
+		util.WriteWsError(ctx, errorMessage)
 		return
 	}
 

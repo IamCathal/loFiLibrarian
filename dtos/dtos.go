@@ -8,6 +8,7 @@ const (
 	REQUEST_ID ctxKey = iota
 	BOOK_ID    ctxKey = iota
 	TIME_TAKEN ctxKey = iota
+	START_TIME ctxKey = iota
 	WS         ctxKey = iota
 )
 

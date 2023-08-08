@@ -24,7 +24,6 @@ func SetLogger(newLogger *zap.Logger) {
 }
 
 func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, error) {
-	startTime := time.Now().UnixMilli()
 	body := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
 	bodyBytes, err := io.ReadAll(body)
 	if err != nil {
@@ -61,14 +60,13 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 		ISBN:         ID,
 	}
 
-	ctx = context.WithValue(ctx, dtos.TIME_TAKEN, time.Now().UnixMilli()-startTime)
 	util.WriteBookDetailsBreadcrumb(ctx, partialBookBreadcrumb)
 
 	return lookUpGoodReadsPageForBook(ctx, book.Description.FullContentURL)
 }
 
 func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.BookBreadcrumb, error) {
-	startTime := time.Now().UnixMilli()
+	ctx = context.WithValue(ctx, dtos.START_TIME, time.Now().UnixMilli())
 
 	fullBookInfo, err := extractBookInfo(ctx, bookPageURL)
 	if err != nil {
@@ -76,7 +74,6 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 	}
 	fullBookInfo.ISBN = ctx.Value(dtos.BOOK_ID).(string)
 
-	ctx = context.WithValue(ctx, dtos.TIME_TAKEN, time.Now().UnixMilli()-startTime)
 	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo)
 
 	return fullBookInfo, nil
@@ -102,11 +99,17 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 
 func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb, error) {
 	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(dtos.BOOK_ID).(string), bookPage)
-	doc, err := goquery.NewDocumentFromReader(getPage(bookPage))
+
+	thePage := getPage(bookPage)
+	defer thePage.Close()
+
+	doc, err := goquery.NewDocumentFromReader(thePage)
 	checkErr(err)
 
 	bookInfo := dtos.BookBreadcrumb{}
 
+	// TODO when an error is hit here (often cant read page numbers) the entire HTML document should be logged
+	// for debugging to see if it was just an empty response. Maybe try a retry in a second or two
 	bookInfo.Title = strings.TrimSpace(doc.Find("h1.Text").Text())
 	bookInfo.Author = strings.TrimSpace(doc.Find(".ContributorLinksList > span:nth-child(1) > a:nth-child(1) > span:nth-child(1)").Text())
 	bookInfo.Series = strings.TrimSpace(doc.Find("h3.Text__italic > a:nth-child(1)").Text())
@@ -114,16 +117,20 @@ func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb,
 	ratingsCountStr := doc.Find("a.RatingStatistics > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)").Text()
 	bookInfo.OtherCovers = extractOtherCovers(doc)
 	bookInfo.Genres = extractGenres(doc)
+
 	bookInfo.Pages, err = extractIntPages(strings.TrimSpace(doc.Find(".FeaturedDetails > p:nth-child(1)").Text()))
 	if err != nil {
 		return dtos.BookBreadcrumb{}, err
 	}
+
 	bookInfo.Rating, err = strToFloat(stripOfFormatting(doc.Find("a.RatingStatistics > div:nth-child(1) > div:nth-child(2)").Text()))
 	if err != nil {
+		logger.Sugar().Infof("Current bookInfo before rating value extraction failure: %+v", bookInfo)
 		return dtos.BookBreadcrumb{}, err
 	}
 	bookInfo.RatingsCount, err = getRatingsCount(ratingsCountStr)
 	if err != nil {
+		logger.Sugar().Infof("Current bookInfo before ratings count extraction failure: %+v", bookInfo)
 		return dtos.BookBreadcrumb{}, err
 	}
 

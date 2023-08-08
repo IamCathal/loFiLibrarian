@@ -130,3 +130,11 @@ input[type=number] {
   font-weight: 400;
   font-style: normal;
 }
+
+.errorMessageBox {
+  background-color: #070707;
+}
+
+.redErrorText {
+  color: #a41515;
+}

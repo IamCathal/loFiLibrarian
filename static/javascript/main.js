@@ -6,7 +6,7 @@ var barcodeDetector;
 try {
   barcodeDetector = new BarcodeDetector();
 } catch (error) {
-  console.log("Barcode detection is not support by your browser. See https://developer.mozilla.org/en-US/docs/Web/API/Barcode_Detection_API#browser_compatibility for support details")
+  console.log("Barcode detection is not supported by your browser. See https://developer.mozilla.org/en-US/docs/Web/API/Barcode_Detection_API#browser_compatibility for support details")
   hideWebcamElements()
 }
 
@@ -114,13 +114,13 @@ function renderPartialBookBreadcrumb(bookInfo, timeTaken, timeTakenForInitialReq
                       </div>
                       <div class="row bookPagesAndReview">
                         <div class="col-4 pl-0">
-                          ${bookInfo.pages.toLocaleString()}
+                          ${bookInfo.pages.toLocaleString()} 🗐
                         </div>
                         <div class="col pl-0">
-                          ${bookInfo.rating}
+                          ${bookInfo.rating} ✯
                         </div>
                         <div class="col pl-0">
-                          ${bookInfo.ratingsCount.toLocaleString()}
+                          ${bookInfo.ratingsCount.toLocaleString()} 🯈
                         </div>
                       </div>
                       <div class="row bookSubInfo" id="${bookInfo.isbn}-genres">
@@ -182,7 +182,7 @@ function clearBooks() {
 
 function lookUpWs(bookId) {
     const startTime = new Date()
-    const socket = new WebSocket(`wss://${getCurrentHostname()}/ws/lookup`);
+    const socket = new WebSocket(`wss://${getCurrentHostname()}/eee`);
     socket.onopen = function(ev) {
       const lookUpRequest = {
         "id": crypto.randomUUID(),
@@ -218,7 +218,9 @@ function lookUpWs(bookId) {
             break
 
         case "error":
-            document.getElementById("bookInfoDiv").innerHTML = response.errorMessage
+            console.error(response);
+            writeErrorMessageBox(response)
+            // document.getElementById("bookInfoDiv").innerHTML = response.errorMessage
             break
 
         default:
@@ -232,6 +234,15 @@ function lookUpWs(bookId) {
     }
 }
 
+function writeErrorMessageBox(error) {
+  document.getElementById("bookErrorBlock").style.visibility = "visible";
+  document.getElementById("bookErrorDiv").innerHTML +=
+  `
+        <div class="row pl-2 pr-2 redErrorText">
+            Error querying book ${error.bookId}: ${error.errorMessage}                    
+        </div>
+  `
+}
 
 
 function addSearchButtonSkeleton() {

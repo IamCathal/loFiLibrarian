@@ -17,6 +17,9 @@ func NewWsMessage(ctx context.Context, msg string) wsMessage {
 }
 
 func NewWsBookInfo(ctx context.Context, bookInfo BookBreadcrumb) wsBookInfo {
+	startTime := ctx.Value(START_TIME).(int64)
+	ctx = context.WithValue(ctx, TIME_TAKEN, time.Now().UnixMilli()-startTime)
+
 	return wsBookInfo{
 		Type:     "bookInfo",
 		BookInfo: bookInfo,
@@ -29,6 +32,9 @@ func NewWsBookInfo(ctx context.Context, bookInfo BookBreadcrumb) wsBookInfo {
 }
 
 func NewWsError(ctx context.Context, msg string) wsError {
+	startTime := ctx.Value(START_TIME).(int64)
+	ctx = context.WithValue(ctx, TIME_TAKEN, time.Now().UnixMilli()-startTime)
+
 	return wsError{
 		Type:         "error",
 		ErrorMessage: msg,
