@@ -68,7 +68,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 // 	ID := r.URL.Query().Get("id")
 // 	if isValid := isValidInt(ID); !isValid {
-// 		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
+// 		errorMsg := fmt.Sprintf("Invalid id ' %s ' given", ID)
 // 		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
 // 		return
 // 	}
@@ -77,7 +77,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 // 	ctx = context.WithValue(ctx, dtos.START_TIME, startTime)
 
 // 	if isValid := isValidInt(ID); !isValid {
-// 		errorMsg := fmt.Sprintf("Invalid id '%s' given", ID)
+// 		errorMsg := fmt.Sprintf("Invalid id ' %s ' given", ID)
 // 		util.WriteWsError(ctx, errorMsg)
 // 		return
 // 	}
@@ -133,7 +133,7 @@ func wsLookUp(w http.ResponseWriter, r *http.Request) {
 	ctx = context.WithValue(ctx, dtos.WS, ws)
 
 	if isValid := isValidInt(lookUpRequest.BookId); !isValid {
-		errorMsg := fmt.Sprintf("Invalid id '%s' given", lookUpRequest.BookId)
+		errorMsg := fmt.Sprintf("Invalid id ' %s ' given", lookUpRequest.BookId)
 		util.WriteWsError(ctx, errorMsg)
 		return
 	}
@@ -142,7 +142,7 @@ func wsLookUp(w http.ResponseWriter, r *http.Request) {
 
 	_, err = goodreads.GetBookDetailsWs(ctx, lookUpRequest.BookId)
 	if err != nil {
-		errorMessage := fmt.Sprintf("Error getting book details: %v", err)
+		errorMessage := fmt.Sprintf("error getting book details: %+v", err)
 		logger.Sugar().Error(errorMessage)
 		util.WriteWsError(ctx, errorMessage)
 		return

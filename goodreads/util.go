@@ -25,12 +25,6 @@ var (
 	ONLY_NUMBERS               = regexp.MustCompile(`([0-9]+)`)
 )
 
-func checkErr(err error) {
-	if err != nil {
-		logger.Sugar().Fatal(err)
-	}
-}
-
 func stripOfFormatting(input string) string {
 	formatted := strings.ReplaceAll(input, "\n", "")
 	formatted = strings.TrimSpace(formatted)
@@ -40,7 +34,7 @@ func stripOfFormatting(input string) string {
 func strToInt(str string) (int, error) {
 	intVersion, err := strconv.Atoi(str)
 	if err != nil {
-		return 0, fmt.Errorf("failed parse int from string '%s': %w", str, err)
+		return 0, fmt.Errorf("failed parse int from string ' %s ': %w", str, err)
 	}
 	return intVersion, nil
 }
@@ -51,7 +45,7 @@ func strToFloat(floatString string) (float64, error) {
 		if floatString == "" {
 			floatString = "(empty)"
 		}
-		return 0, fmt.Errorf("failed parse float from string '%s': %w", floatString, err)
+		return 0, fmt.Errorf("failed parse float from string ' %s ': %w", floatString, err)
 	}
 	return floatVal, nil
 }
@@ -67,9 +61,14 @@ func getFakeReferrerPage(URL string) string {
 }
 
 func extractIntPages(pagesString string) (int, error) {
+	if !strings.Contains(pagesString, "pages") {
+		logger.Sugar().Infof("No listed page count for pageString '%s'", pagesString)
+		return 0, nil
+	}
+
 	extractedNumbers := ONLY_NUMBERS.FindAllString(pagesString, 2)
 	if len(extractedNumbers) != 1 {
-		return 0, fmt.Errorf("failed to extract only numbers from pagesString '%s'", pagesString)
+		return 0, fmt.Errorf("failed to extract only numbers from pagesString ' %s '", pagesString)
 	}
 	return strToInt(extractedNumbers[0])
 }

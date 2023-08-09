@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -24,7 +25,10 @@ func SetLogger(newLogger *zap.Logger) {
 }
 
 func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, error) {
-	body := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
+	body, err := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
 	bodyBytes, err := io.ReadAll(body)
 	if err != nil {
 		return dtos.BookBreadcrumb{}, err
@@ -46,6 +50,17 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 	if err != nil || len(booksFoundRes) == 0 {
 		return dtos.BookBreadcrumb{}, err
 	}
+
+	possibleBookUrl := ""
+	if book.Description.FullContentURL == "" {
+		// try to use the bookUrl instead
+		possibleBookUrl = GOODREADS_BASE_BOOK_URL + book.BookURL
+	} else {
+		possibleBookUrl = GOODREADS_BASE_BOOK_URL + book.Description.FullContentURL
+	}
+
+	logger.Sugar().Infof("Possible book URL is %s", possibleBookUrl)
+
 	partialBookBreadcrumb := dtos.BookBreadcrumb{
 		Title:        book.BookTitleBare,
 		Author:       book.Author.Name,
@@ -53,16 +68,15 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 		MainCover:    book.ImageURL,
 		OtherCovers:  []string{},
 		Pages:        book.NumPages,
-		Link:         book.Description.FullContentURL,
+		Link:         possibleBookUrl,
 		Rating:       floatRating,
 		RatingsCount: book.RatingsCount,
 		Genres:       []string{},
 		ISBN:         ID,
 	}
-
 	util.WriteBookDetailsBreadcrumb(ctx, partialBookBreadcrumb)
 
-	return lookUpGoodReadsPageForBook(ctx, book.Description.FullContentURL)
+	return lookUpGoodReadsPageForBook(ctx, possibleBookUrl)
 }
 
 func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.BookBreadcrumb, error) {
@@ -100,11 +114,16 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb, error) {
 	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(dtos.BOOK_ID).(string), bookPage)
 
-	thePage := getPage(bookPage)
+	thePage, err := getPage(bookPage)
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
 	defer thePage.Close()
 
 	doc, err := goquery.NewDocumentFromReader(thePage)
-	checkErr(err)
+	if err != nil {
+		return dtos.BookBreadcrumb{}, err
+	}
 
 	bookInfo := dtos.BookBreadcrumb{}
 
@@ -138,10 +157,13 @@ func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb,
 	return bookInfo, err
 }
 
-func getPage(pageURL string) io.ReadCloser {
+func getPage(pageURL string) (io.ReadCloser, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", pageURL, nil)
-	checkErr(err)
+	if err != nil {
+		myErr := fmt.Errorf("failed to create GET request for URL ' %s ': %w", pageURL, errWithTrace(err))
+		return nil, myErr
+	}
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
@@ -153,6 +175,14 @@ func getPage(pageURL string) io.ReadCloser {
 	req.Header.Set("Referer", getFakeReferrerPage(pageURL))
 
 	res, err := client.Do(req)
-	checkErr(err)
-	return res.Body
+	if err != nil {
+		myErr := fmt.Errorf("failed to get URL ' %s ': %w", pageURL, errWithTrace(err))
+		return nil, myErr
+	}
+
+	return res.Body, nil
+}
+
+func errWithTrace(err error) error {
+	return fmt.Errorf(err.Error(), string(debug.Stack()))
 }
