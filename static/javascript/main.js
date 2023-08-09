@@ -4,47 +4,13 @@ let lastFoundBookID;
 var barcodeDetector;
 
 try {
-    const socket = new WebSocket(`ws://${getCurrentHostname()}/livestatus`);
-    socket.onopen = function(ev) {
-      console.log("Opened heartbeat ws connection")
-    }
-
-    let last20Latencies = []
-
-    socket.onmessage = function(ev) {
-      const response = JSON.parse(ev.data)
-      
-      // TODO change this latency to be only the MS difference
-      const latency = timeSince(new Date(response.serverSentTime))
-      const uptime = timeSince(new Date(response.serverStartupTime))
-
-      if (last20Latencies.length > 20) {
-        last20Latencies = last20Latencies.slice(-1)
-      }
-
-      latencyPureNumber = parseInt(latency.replace(/[^0-9]+/g, ""))
-      last20Latencies.push(latencyPureNumber)
-      console.log(last20Latencies)
-
-      document.getElementById("currPing").textContent = timeSince(new Date(response.serverSentTime))
-      document.getElementById("uptime").textContent = uptime
-      document.getElementById("avgPing").textContent = Math.round(getAvgPing(last20Latencies))
-    }
-
-    socket.onclose = function(ev) {
-      console.log("Closed heartbeat ws connection")
-    }
-} catch (error) {
-  console.error(error)
-}
-
-try {
   barcodeDetector = new BarcodeDetector();
 } catch (error) {
   console.log("Barcode detection is not supported by your browser. See https://developer.mozilla.org/en-US/docs/Web/API/Barcode_Detection_API#browser_compatibility for support details")
   hideWebcamElements()
 }
 
+setupLiveStatusWs()
 webcam()
 giveSwayaaangBordersToItems()
 setInterval(tryToDetectISBN, 150)
@@ -52,6 +18,39 @@ setInterval(tryToDetectISBN, 150)
 function hideWebcamElements() {
   document.getElementById("webcamElements").style.display = "none";
   document.getElementById("manualEntryDetail").setAttribute("open", true)
+}
+
+function setupLiveStatusWs() {
+  try {
+      const socket = new WebSocket(`wss://${getCurrentHostname()}/livestatus`);
+      socket.onopen = function(ev) {
+        console.log("Opened heartbeat ws connection")
+      }
+
+      let last20Latencies = []
+
+      socket.onmessage = function(ev) {
+        const response = JSON.parse(ev.data)
+        const latency = millisecondsSince(new Date(response.serverSentTime))
+        const uptime = timeSince(new Date(response.serverStartupTime))
+
+        if (last20Latencies.length > 5) {
+          last20Latencies = last20Latencies.slice(0, -1)
+        }
+
+        last20Latencies.unshift(latency)
+
+        document.getElementById("currPing").textContent = latency + "ms"
+        document.getElementById("uptime").textContent = uptime
+        document.getElementById("avgPing").textContent = Math.round(getAvgPing(last20Latencies)) + "ms"
+      }
+
+      socket.onclose = function(ev) {
+        console.log("Closed heartbeat ws connection")
+      }
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 function webcam() {
@@ -328,13 +327,27 @@ function getGenreClass(genre) {
   return "normalGenre"
 }
 
-function timeSince(targetDate) {
-    let diffInMs = Math.abs(targetDate.getTime() - new Date())
+function millisecondsSince(targetDate) {
+  return Math.abs(targetDate.getTime() - new Date())
+}
 
-    if (diffInMs > 1000) {
-        return Math.floor(diffInMs / 1000)+"s"
-    }
-    return diffInMs+"ms"
+function timeSince(targetDate) {
+  let seconds = Math.floor((new Date()-targetDate)/1000)
+  let interval = seconds / 31536000 // years
+  interval = seconds / 2592000; // months
+  interval = seconds / 86400; // days
+  if (interval > 1) {
+    return Math.floor(interval) + "d";
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    return Math.floor(interval) + "h";
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    return Math.floor(interval) + "m";
+  }
+  return Math.floor(seconds) + "s";
 }
 
 function timeTakenString(timeTakenMs) {

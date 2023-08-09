@@ -176,7 +176,7 @@ func liveStatus(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		util.WriteWsLiveStatus(ctx, appConfig.ApplicationStartUpTime)
-		time.Sleep(2 * time.Second)
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
