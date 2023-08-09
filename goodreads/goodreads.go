@@ -56,7 +56,7 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 		// try to use the bookUrl instead
 		possibleBookUrl = GOODREADS_BASE_BOOK_URL + book.BookURL
 	} else {
-		possibleBookUrl = GOODREADS_BASE_BOOK_URL + book.Description.FullContentURL
+		possibleBookUrl = book.Description.FullContentURL
 	}
 
 	logger.Sugar().Infof("Possible book URL is %s", possibleBookUrl)
