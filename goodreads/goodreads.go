@@ -143,6 +143,7 @@ func getBookInfoFromURL(ctx context.Context, bookPageURL string) (dtos.BookBread
 		if extractDetailsErr != nil {
 			errorsEncountered = append(errorsEncountered, extractDetailsErr)
 			thePage.Close()
+			time.Sleep(1 * time.Second)
 			continue
 		} else {
 			thePage.Close()
