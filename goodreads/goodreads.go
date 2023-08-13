@@ -82,7 +82,7 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.BookBreadcrumb, error) {
 	ctx = context.WithValue(ctx, dtos.START_TIME, time.Now().UnixMilli())
 
-	fullBookInfo, err := extractBookInfo(ctx, bookPageURL)
+	fullBookInfo, err := getBookInfoFromURL(ctx, bookPageURL)
 	if err != nil {
 		return dtos.BookBreadcrumb{}, err
 	}
@@ -111,24 +111,54 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 // 	return extractBookInfo(booksFoundRes[0].Description.FullContentURL)
 // }
 
-func extractBookInfo(ctx context.Context, bookPage string) (dtos.BookBreadcrumb, error) {
-	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(dtos.BOOK_ID).(string), bookPage)
+func getBookInfoFromURL(ctx context.Context, bookPageURL string) (dtos.BookBreadcrumb, error) {
+	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(dtos.BOOK_ID).(string), bookPageURL)
+	attemptsMade := 0
+	maxRetryCount := 3
 
-	thePage, err := getPage(bookPage)
-	if err != nil {
-		return dtos.BookBreadcrumb{}, err
+	errorsEncountered := []error{}
+
+	for {
+		if attemptsMade >= maxRetryCount {
+			break
+		}
+		attemptsMade++
+		logger.Sugar().Infof("Attempt %d get book info from %s", attemptsMade, bookPageURL)
+
+		thePage, getPageErr := getPage(bookPageURL)
+		if getPageErr != nil {
+			errorsEncountered = append(errorsEncountered, getPageErr)
+			thePage.Close()
+			continue
+		}
+		defer thePage.Close()
+
+		doc, makeDocumentFromBodyErr := goquery.NewDocumentFromReader(thePage)
+		if makeDocumentFromBodyErr != nil {
+			errorsEncountered = append(errorsEncountered, makeDocumentFromBodyErr)
+			thePage.Close()
+		}
+
+		bookInfo, extractDetailsErr := extractBookInfoFromResponse(ctx, doc)
+		if extractDetailsErr != nil {
+			errorsEncountered = append(errorsEncountered, extractDetailsErr)
+			thePage.Close()
+			continue
+		} else {
+			thePage.Close()
+			logger.Sugar().Infof("Successfully extracted book info after %d attempts", attemptsMade)
+			return bookInfo, nil
+		}
 	}
-	defer thePage.Close()
 
-	doc, err := goquery.NewDocumentFromReader(thePage)
-	if err != nil {
-		return dtos.BookBreadcrumb{}, err
-	}
+	logger.Sugar().Warnf("Failed to get book info from URL after %d retries: %+v", attemptsMade, errorsEncountered)
+	return dtos.BookBreadcrumb{}, fmt.Errorf("failed to get book info from URL after %d retries: %+v", attemptsMade, errorsEncountered)
+}
 
+func extractBookInfoFromResponse(ctx context.Context, doc *goquery.Document) (dtos.BookBreadcrumb, error) {
 	bookInfo := dtos.BookBreadcrumb{}
+	var err error
 
-	// TODO when an error is hit here (often cant read page numbers) the entire HTML document should be logged
-	// for debugging to see if it was just an empty response. Maybe try a retry in a second or two
 	bookInfo.Title = strings.TrimSpace(doc.Find("h1.Text").Text())
 	bookInfo.Author = strings.TrimSpace(doc.Find(".ContributorLinksList > span:nth-child(1) > a:nth-child(1) > span:nth-child(1)").Text())
 	bookInfo.Series = strings.TrimSpace(doc.Find("h3.Text__italic > a:nth-child(1)").Text())

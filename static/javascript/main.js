@@ -147,13 +147,13 @@ function renderPartialBookBreadcrumb(bookInfo, timeTaken, timeTakenForInitialReq
                           ${bookInfo.author}
                       </div>
                       <div class="row bookPagesAndReview">
-                        <div class="col-4 pl-0">
+                        <div>
                           ${bookInfo.pages.toLocaleString()} 🗐
                         </div>
-                        <div class="col pl-0">
+                        <div class="pl-3">
                           ${bookInfo.rating} ✯
                         </div>
-                        <div class="col pl-0">
+                        <div class="pl-3">
                           ${bookInfo.ratingsCount.toLocaleString()} 🯈
                         </div>
                       </div>
