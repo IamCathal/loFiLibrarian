@@ -202,6 +202,29 @@ function renderRemainingBookBreadcrumbDetails(bookInfo, timeTaken) {
     document.getElementById(`${bookInfo.isbn}-pageLookupTimeTaken`).innerHTML = timeTakenString(timeTaken)
 }
 
+function renderNoBookFound(response) {
+  const timeTakenFormatted = timeTakenString(response.timeTaken)
+  document.getElementById("bookInfoDiv").innerHTML += 
+  `
+          <div class="row pt-1 pb-1 pl-2 pr-2" id="9780735619678">
+            <div class="col">
+              <div class="col">
+                <div class="row bookTitle">
+                    No book found for ${response.bookId}
+                </div>
+              </div>
+
+              <div class="row pt-1">
+                  <div class="col text-center timeTakenText" id="9780735619678-firstRequestTimeTaken">
+                    ${timeTakenFormatted}
+                  </div>
+              </div>
+            </div>
+          </div>
+  `
+
+}
+
 function fillInGenreBlocks(genres) {
   let output = ""
   genres.forEach(genre => {
@@ -231,13 +254,11 @@ function lookUpWs(bookId) {
 
     socket.onmessage = function(ev) {
       const response = JSON.parse(ev.data)
-      console.log(`Latency is ${timeSince(new Date(response.time))}`)
+      console.log(`Latency is ${millisecondsSince(new Date(response.time))}ms`)
       console.log(response)
 
       switch (response.type) {
         case "message":
-            console.log("Message type")
-            console.log(response.msg)
             timeTakenForInitialRequest = new Date().getTime() - startTime.getTime()
             break
 
@@ -245,7 +266,14 @@ function lookUpWs(bookId) {
           console.log(response.bookInfo)
             if (!partialBookBreadcrumbReceived) {
               partialBookBreadcrumbReceived = true
-              renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
+
+              if (noBookWasFound(response)) {
+                console.log("no book was found")
+                renderNoBookFound(response)
+              } else {
+                renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
+              }
+
             } else {
               renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
             }
@@ -364,4 +392,8 @@ function getAvgPing(latencies) {
     total+= latencies[i]
   }
   return total / latencies.length
+}
+
+function noBookWasFound(response) {
+  return response.bookInfo.title == ""
 }

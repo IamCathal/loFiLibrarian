@@ -42,6 +42,7 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 
 	logger.Sugar().Infof("%d books were found for ID: %s", len(booksFoundRes), ID)
 	if len(booksFoundRes) == 0 {
+		util.WriteBookDetailsBreadcrumb(ctx, dtos.BookBreadcrumb{})
 		return dtos.BookBreadcrumb{}, nil
 	}
 
@@ -127,21 +128,24 @@ func getBookInfoFromURL(ctx context.Context, bookPageURL string) (dtos.BookBread
 
 		thePage, getPageErr := getPage(bookPageURL)
 		if getPageErr != nil {
-			errorsEncountered = append(errorsEncountered, getPageErr)
+			errorsEncountered = append(errorsEncountered, fmt.Errorf("failed to get page for %s: %w", bookPageURL, getPageErr))
 			thePage.Close()
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		defer thePage.Close()
 
 		doc, makeDocumentFromBodyErr := goquery.NewDocumentFromReader(thePage)
 		if makeDocumentFromBodyErr != nil {
-			errorsEncountered = append(errorsEncountered, makeDocumentFromBodyErr)
+			errorsEncountered = append(errorsEncountered, fmt.Errorf("failed to create document from reader for %s: %w", bookPageURL, makeDocumentFromBodyErr))
 			thePage.Close()
+			time.Sleep(1 * time.Second)
+			continue
 		}
 
 		bookInfo, extractDetailsErr := extractBookInfoFromResponse(ctx, doc)
 		if extractDetailsErr != nil {
-			errorsEncountered = append(errorsEncountered, extractDetailsErr)
+			errorsEncountered = append(errorsEncountered, fmt.Errorf("failed info extraction from response: %w", extractDetailsErr))
 			thePage.Close()
 			time.Sleep(1 * time.Second)
 			continue
