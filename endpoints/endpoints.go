@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/iamcathal/lofilibrarian/dtos"
 	"github.com/iamcathal/lofilibrarian/goodreads"
+	"github.com/iamcathal/lofilibrarian/openlibrary"
 	"github.com/iamcathal/lofilibrarian/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 	"go.uber.org/zap"
@@ -46,6 +47,7 @@ func SetupRouter() *mux.Router {
 	// r.HandleFunc("/lookup", lookUp).Methods("GET")
 	r.HandleFunc("/eee", wsLookUp).Methods("GET")
 	r.HandleFunc("/livestatus", liveStatus).Methods("GET")
+	r.HandleFunc("/openlib", openLibrary).Methods("GET")
 	// r.HandleFunc("/lookup", lookUp).Methods("GET")
 	// r.Use(logMiddleware)
 
@@ -66,12 +68,12 @@ func index(w http.ResponseWriter, r *http.Request) {
 // 	ctx := context.Background()
 // 	startTime := time.Now().UnixMilli()
 
-// 	ID := r.URL.Query().Get("id")
-// 	if isValid := isValidInt(ID); !isValid {
-// 		errorMsg := fmt.Sprintf("Invalid id ' %s ' given", ID)
-// 		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
-// 		return
-// 	}
+// ID := r.URL.Query().Get("id")
+// if isValid := isValidInt(ID); !isValid {
+// 	errorMsg := fmt.Sprintf("Invalid id ' %s ' given", ID)
+// 	SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
+// 	return
+// }
 // 	ctx = context.WithValue(ctx, dtos.REQUEST_ID, "manualId")
 // 	ctx = context.WithValue(ctx, dtos.BOOK_ID, ID)
 // 	ctx = context.WithValue(ctx, dtos.START_TIME, startTime)
@@ -190,6 +192,31 @@ func status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(req)
+}
+
+func openLibrary(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now().UnixMilli()
+	ctx := context.Background()
+
+	isbn := r.URL.Query().Get("id")
+	if isValid := isValidInt(isbn); !isValid {
+		errorMsg := fmt.Sprintf("Invalid isbn ' %s ' given", isbn)
+		SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
+		return
+	}
+
+	ctx = context.WithValue(ctx, dtos.START_TIME, startTime)
+	ctx = context.WithValue(ctx, dtos.BOOK_ID, isbn)
+
+	bookInfo, err := openlibrary.IsbnSearch(ctx, isbn)
+	if err != nil {
+		SendBasicInvalidResponse(w, r, "failed to lookup book", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(bookInfo)
 }
 
 func logMiddleware(next http.Handler) http.Handler {

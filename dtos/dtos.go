@@ -22,6 +22,8 @@ type UptimeResponse struct {
 	StartUpTime int64         `json:"startuptime,omitempty"`
 }
 
+// Goodreads
+
 type BookBreadcrumb struct {
 	Title        string   `json:"title"`
 	Author       string   `json:"author"`

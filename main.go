@@ -10,6 +10,7 @@ import (
 	"github.com/iamcathal/lofilibrarian/dtos"
 	"github.com/iamcathal/lofilibrarian/endpoints"
 	"github.com/iamcathal/lofilibrarian/goodreads"
+	"github.com/iamcathal/lofilibrarian/openlibrary"
 	"github.com/iamcathal/lofilibrarian/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 	"github.com/joho/godotenv"
@@ -52,6 +53,7 @@ func main() {
 	appConfig := initConfig()
 	endpoints.InitConfig(appConfig, logger)
 	goodreads.SetLogger(logger)
+	openlibrary.SetLogger(logger)
 	util.SetLogger(logger)
 
 	if os.Getenv("INFLUX_ENABLE") != "" {

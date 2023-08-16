@@ -27,12 +27,15 @@ func SetLogger(newLogger *zap.Logger) {
 func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, error) {
 	body, err := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
 	if err != nil {
+		body.Close()
 		return dtos.BookBreadcrumb{}, err
 	}
 	bodyBytes, err := io.ReadAll(body)
 	if err != nil {
+		body.Close()
 		return dtos.BookBreadcrumb{}, err
 	}
+	defer body.Close()
 
 	booksFoundRes := []dtos.GoodReadsSearchBookResult{}
 	err = json.Unmarshal(bodyBytes, &booksFoundRes)
