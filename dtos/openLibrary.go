@@ -1,5 +1,7 @@
 package dtos
 
+// Generated from JSON response using https://mholt.github.io/json-to-go/
+
 type OpenLibraryBook struct {
 	Publishers         []string                `json:"publishers"`
 	Identifiers        OtherServiceIdentifiers `json:"identifiers"`
@@ -33,19 +35,24 @@ type OtherServiceIdentifiers struct {
 	Librarything []string `json:"librarything"`
 	Goodreads    []string `json:"goodreads"`
 }
+
 type Authors struct {
 	Key string `json:"key"`
 }
+
 type Works struct {
 	Key string `json:"key"`
 }
+
 type Type struct {
 	Key string `json:"key"`
 }
+
 type Created struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
+
 type LastModified struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`

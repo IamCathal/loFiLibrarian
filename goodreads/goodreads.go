@@ -97,24 +97,6 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 	return fullBookInfo, nil
 }
 
-// func GetBookDetails(ID string) dtos.BookBreadcrumb {
-// 	logger.Sugar().Infof("Retrieving book details for ID: %s", ID)
-// 	body := getPage(fmt.Sprintf("https://www.goodreads.com/book/auto_complete?format=json&q=%s", ID))
-// 	bodyBtytes, err := io.ReadAll(body)
-// 	checkErr(err)
-
-// 	booksFoundRes := []dtos.GoodReadsSearchBookResult{}
-// 	err = json.Unmarshal(bodyBtytes, &booksFoundRes)
-// 	checkErr(err)
-
-// 	if len(booksFoundRes) == 0 {
-// 		logger.Sugar().Infof("No books found for ID: %s", ID)
-// 		return dtos.BookBreadcrumb{}
-// 	}
-// 	logger.Sugar().Infof("%d books were found for ID: %s at %s", len(booksFoundRes), ID, booksFoundRes[0].Description.FullContentURL)
-// 	return extractBookInfo(booksFoundRes[0].Description.FullContentURL)
-// }
-
 func getBookInfoFromURL(ctx context.Context, bookPageURL string) (dtos.BookBreadcrumb, error) {
 	logger.Sugar().Infof("Retrieving goodreads page for bookId: %s with URL: %s", ctx.Value(dtos.BOOK_ID).(string), bookPageURL)
 	attemptsMade := 0

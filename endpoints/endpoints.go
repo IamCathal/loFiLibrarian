@@ -64,37 +64,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/index.html")
 }
 
-// func lookUp(w http.ResponseWriter, r *http.Request) {
-// 	ctx := context.Background()
-// 	startTime := time.Now().UnixMilli()
-
-// ID := r.URL.Query().Get("id")
-// if isValid := isValidInt(ID); !isValid {
-// 	errorMsg := fmt.Sprintf("Invalid id ' %s ' given", ID)
-// 	SendBasicInvalidResponse(w, r, errorMsg, http.StatusBadRequest)
-// 	return
-// }
-// 	ctx = context.WithValue(ctx, dtos.REQUEST_ID, "manualId")
-// 	ctx = context.WithValue(ctx, dtos.BOOK_ID, ID)
-// 	ctx = context.WithValue(ctx, dtos.START_TIME, startTime)
-
-// 	if isValid := isValidInt(ID); !isValid {
-// 		errorMsg := fmt.Sprintf("Invalid id ' %s ' given", ID)
-// 		util.WriteWsError(ctx, errorMsg)
-// 		return
-// 	}
-
-// 	bookDetails, err := goodreads.GetBookDetailsWs(ctx, ID)
-// 	if err != nil {
-// 		logger.Sugar().Errorf("Error getting book details: %v", err)
-// 		util.WriteWsError(ctx, "error getting book details")
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(bookDetails)
-// }
-
 func wsLookUp(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now().UnixMilli()
 	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", r.RemoteAddr, r.Header["User-Agent"])
@@ -121,7 +90,7 @@ func wsLookUp(w http.ResponseWriter, r *http.Request) {
 		logger.Warn(err.Error())
 	}
 
-	lookUpRequest := dtos.InitLookupDto{}
+	lookUpRequest := dtos.LookupRequest{}
 	err = json.Unmarshal(msg, &lookUpRequest)
 	if err != nil {
 		util.WriteWsError(ctx, "Invalid lookup request given")
@@ -154,7 +123,7 @@ func wsLookUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func liveStatus(w http.ResponseWriter, r *http.Request) {
-	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", r.RemoteAddr, r.Header["User-Agent"])
+	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", getRealIP(r), r.Header["User-Agent"])
 
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ctx := context.Background()
