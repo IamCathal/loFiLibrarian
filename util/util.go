@@ -2,7 +2,8 @@ package util
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -70,6 +71,5 @@ func WriteWsLiveStatus(ctx context.Context, appStartTime time.Time) {
 }
 
 func isClosedErr(err error) bool {
-	fmt.Printf("\n%+v\n", err)
-	return err == err.(*websocket.CloseError)
+	return errors.Is(err, syscall.EPIPE)
 }
