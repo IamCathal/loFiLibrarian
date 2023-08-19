@@ -66,7 +66,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 func wsLookUp(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now().UnixMilli()
-	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", r.RemoteAddr, r.Header["User-Agent"])
+	logger.Sugar().Infof("Initiated new ws connection from %s with user-agent: %s", getRealIP(r), r.Header["User-Agent"])
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ctx := context.Background()
 
