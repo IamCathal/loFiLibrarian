@@ -196,6 +196,7 @@ function renderRemainingBookBreadcrumbDetails(bookInfo, timeTaken) {
       ev.style.width = "100%"
     })
 
+
     document.getElementById(`${bookInfo.isbn}-genres`).innerHTML = fillInGenreBlocks(bookInfo.genres)
     document.getElementById(`${bookInfo.isbn}-series`).innerHTML = bookInfo.series
     document.getElementById(`${bookInfo.isbn}-pageLookupTimeTaken`).innerHTML = timeTakenString(timeTaken)
@@ -247,6 +248,7 @@ function lookUpWs(bookId) {
       socket.send(JSON.stringify(lookUpRequest))
     }
 
+    let partialBookBreadcrumbReceived = false
     let timeTakenForInitialRequest = 0
 
 
@@ -261,14 +263,23 @@ function lookUpWs(bookId) {
             break
 
         case "bookInfo":
-          if (!response.isAllDetails) {
+          console.log(response.bookInfo)
+          if (response.isFromOpenLibrary) {
+            console.log(response)
+            renderOpenLibrarySearch(response, timeTakenForInitialRequest)
+            break
+          }
+
+          if (!partialBookBreadcrumbReceived) {
+            partialBookBreadcrumbReceived = true
+
             if (noBookWasFound(response)) {
+              console.log("no book was found")
               renderNoBookFound(response)
             } else {
               renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
             }
           } else {
-            renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
             renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
           }
           break
@@ -316,6 +327,11 @@ function giveSwayaaangBordersToItems() {
   document.getElementById("bookInfoDiv").style += swayaaangBorders(0.8)
   document.getElementById("clearButton").style += swayaaangBorders(0.8)
   document.getElementById("searchButton").style += swayaaangBorders(0.8)
+}
+
+function renderOpenLibrarySearch(response, timeTakenForInitialRequest) {
+  renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
+  renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
 }
 
 function swayaaangBorders(borderRadius) {

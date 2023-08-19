@@ -16,14 +16,14 @@ func NewWsMessage(ctx context.Context, msg string) wsMessage {
 	}
 }
 
-func NewWsBookInfo(ctx context.Context, bookInfo BookBreadcrumb, isAllDetails bool) wsBookInfo {
+func NewWsBookInfo(ctx context.Context, bookInfo BookBreadcrumb, isFromOpenLibrary bool) wsBookInfo {
 	startTime := ctx.Value(START_TIME).(int64)
 	ctx = context.WithValue(ctx, TIME_TAKEN, time.Now().UnixMilli()-startTime)
 
 	return wsBookInfo{
-		Type:         "bookInfo",
-		BookInfo:     bookInfo,
-		IsAllDetails: isAllDetails,
+		Type:              "bookInfo",
+		BookInfo:          bookInfo,
+		IsFromOpenLibrary: isFromOpenLibrary,
 
 		Timestamp: time.Now().UnixMilli(),
 		ID:        ctx.Value(REQUEST_ID).(string),

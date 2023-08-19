@@ -109,7 +109,7 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 	}
 	fullBookInfo.ISBN = ctx.Value(dtos.BOOK_ID).(string)
 
-	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo, true)
+	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo, false)
 
 	return fullBookInfo, nil
 }

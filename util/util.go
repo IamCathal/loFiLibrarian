@@ -28,14 +28,14 @@ func WriteWsMessage(ctx context.Context, msg string) {
 	logger.Sugar().Infof("Write partial ws message: %+v", wsMessage)
 }
 
-func WriteBookDetailsBreadcrumb(ctx context.Context, bookBreadcrumb dtos.BookBreadcrumb, isAllDetails bool) {
+func WriteBookDetailsBreadcrumb(ctx context.Context, bookBreadcrumb dtos.BookBreadcrumb, isFromOpenLibrary bool) {
 	if ctx.Value(dtos.WS) == nil {
 		logger.Info("No websocket connection present, skipped write message")
 		return
 	}
 	ws := ctx.Value(dtos.WS).(*websocket.Conn)
 
-	wsBookInfo := dtos.NewWsBookInfo(ctx, bookBreadcrumb, isAllDetails)
+	wsBookInfo := dtos.NewWsBookInfo(ctx, bookBreadcrumb, isFromOpenLibrary)
 	if err := ws.WriteJSON(wsBookInfo); err != nil && !isClosedErr(err) {
 		logger.Sugar().Panicf("failed to write bookBreadcrumb for ' %s ' to websocket: %+v", bookBreadcrumb.ISBN, err)
 	}

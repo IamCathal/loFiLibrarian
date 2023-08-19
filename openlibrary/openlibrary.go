@@ -85,7 +85,6 @@ func getSliceFromOpenLibGenres(genreStrings []string) []string {
 
 func makeIsbnSearch(ctx context.Context, isbn string) (io.ReadCloser, error) {
 	fullSearchUrl := fmt.Sprintf("%s/%s.json", ISBN_SEARCH_BASE_URL, isbn)
-	fmt.Println(fullSearchUrl)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fullSearchUrl, nil)
 	if err != nil {
