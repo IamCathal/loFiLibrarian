@@ -12,6 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/iamcathal/lofilibrarian/dtos"
+	"github.com/iamcathal/lofilibrarian/openlibrary"
 	"github.com/iamcathal/lofilibrarian/util"
 	"go.uber.org/zap"
 )
@@ -56,7 +57,12 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 
 	logger.Sugar().Infof("%d books were found for ID: %s", len(booksFoundRes), ID)
 	if len(booksFoundRes) == 0 {
-		util.WriteBookDetailsBreadcrumb(ctx, dtos.BookBreadcrumb{})
+		bookInfo, err := openlibrary.IsbnSearch(ctx, ID)
+		if err != nil {
+			return dtos.BookBreadcrumb{}, err
+		}
+		util.WriteBookDetailsBreadcrumb(ctx, bookInfo, true)
+
 		return dtos.BookBreadcrumb{}, nil
 	}
 
@@ -89,7 +95,7 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 		Genres:       []string{},
 		ISBN:         ID,
 	}
-	util.WriteBookDetailsBreadcrumb(ctx, partialBookBreadcrumb)
+	util.WriteBookDetailsBreadcrumb(ctx, partialBookBreadcrumb, false)
 
 	return lookUpGoodReadsPageForBook(ctx, possibleBookUrl)
 }
@@ -103,7 +109,7 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 	}
 	fullBookInfo.ISBN = ctx.Value(dtos.BOOK_ID).(string)
 
-	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo)
+	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo, true)
 
 	return fullBookInfo, nil
 }

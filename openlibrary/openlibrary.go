@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/iamcathal/lofilibrarian/dtos"
@@ -25,7 +26,7 @@ func SetLogger(newLogger *zap.Logger) {
 	logger = newLogger
 }
 
-func IsbnSearch(ctx context.Context, isbn string) (dtos.OpenLibraryBook, error) {
+func IsbnSearch(ctx context.Context, isbn string) (dtos.BookBreadcrumb, error) {
 	logger.Sugar().Infof("Retrieving openLibrary isbn search for bookId: %s", ctx.Value(dtos.BOOK_ID).(string))
 	attemptsMade := 0
 	maxRetryCount := 3
@@ -53,18 +54,38 @@ func IsbnSearch(ctx context.Context, isbn string) (dtos.OpenLibraryBook, error) 
 		decodeErr := json.NewDecoder(thePage).Decode(&bookInfo)
 		if decodeErr == nil {
 			logger.Sugar().Infof("Retrieved details for bookId: %s (%s)", isbn, bookInfo.Title)
-			return bookInfo, nil
+			return openLibBookToBreadcrumb(isbn, bookInfo), nil
 		}
 
 		errorsEncountered = append(errorsEncountered, fmt.Errorf("failed to unmarshal openLibrary json response: %w", decodeErr))
 	}
 
 	logger.Sugar().Warnf("Failed to search openLibrary for bookId: %s after %d retries: %+v", isbn, attemptsMade, errorsEncountered)
-	return dtos.OpenLibraryBook{}, fmt.Errorf("failed to search openLibrary for bookId: %s after %d retries: %+v", isbn, attemptsMade, errorsEncountered)
+	return dtos.BookBreadcrumb{}, fmt.Errorf("failed to search openLibrary for bookId: %s after %d retries: %+v", isbn, attemptsMade, errorsEncountered)
+}
+
+func openLibBookToBreadcrumb(isbn string, openLibBook dtos.OpenLibraryBook) dtos.BookBreadcrumb {
+	return dtos.BookBreadcrumb{
+		Title:        openLibBook.Title,
+		Author:       openLibBook.Authors[0].Key,
+		Series:       "",
+		MainCover:    "",
+		Pages:        openLibBook.NumberOfPages,
+		Rating:       0,
+		RatingsCount: 0,
+		Genres:       getSliceFromOpenLibGenres(openLibBook.Subjects),
+		ISBN:         isbn,
+	}
+}
+
+func getSliceFromOpenLibGenres(genreStrings []string) []string {
+	allElementsCombined := strings.Join(genreStrings, ",")
+	return strings.Split(allElementsCombined, ",")
 }
 
 func makeIsbnSearch(ctx context.Context, isbn string) (io.ReadCloser, error) {
 	fullSearchUrl := fmt.Sprintf("%s/%s.json", ISBN_SEARCH_BASE_URL, isbn)
+	fmt.Println(fullSearchUrl)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fullSearchUrl, nil)
 	if err != nil {

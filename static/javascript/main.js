@@ -196,7 +196,6 @@ function renderRemainingBookBreadcrumbDetails(bookInfo, timeTaken) {
       ev.style.width = "100%"
     })
 
-
     document.getElementById(`${bookInfo.isbn}-genres`).innerHTML = fillInGenreBlocks(bookInfo.genres)
     document.getElementById(`${bookInfo.isbn}-series`).innerHTML = bookInfo.series
     document.getElementById(`${bookInfo.isbn}-pageLookupTimeTaken`).innerHTML = timeTakenString(timeTaken)
@@ -248,7 +247,6 @@ function lookUpWs(bookId) {
       socket.send(JSON.stringify(lookUpRequest))
     }
 
-    let partialBookBreadcrumbReceived = false
     let timeTakenForInitialRequest = 0
 
 
@@ -263,21 +261,17 @@ function lookUpWs(bookId) {
             break
 
         case "bookInfo":
-          console.log(response.bookInfo)
-            if (!partialBookBreadcrumbReceived) {
-              partialBookBreadcrumbReceived = true
-
-              if (noBookWasFound(response)) {
-                console.log("no book was found")
-                renderNoBookFound(response)
-              } else {
-                renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
-              }
-
+          if (!response.isAllDetails) {
+            if (noBookWasFound(response)) {
+              renderNoBookFound(response)
             } else {
-              renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
+              renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
             }
-            break
+          } else {
+            renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
+            renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
+          }
+          break
 
         case "error":
             console.error(response);

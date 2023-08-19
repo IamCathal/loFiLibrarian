@@ -39,8 +39,9 @@ type wsMessage struct {
 }
 
 type wsBookInfo struct {
-	Type     string         `json:"type"`
-	BookInfo BookBreadcrumb `json:"bookInfo"`
+	Type         string         `json:"type"`
+	BookInfo     BookBreadcrumb `json:"bookInfo"`
+	IsAllDetails bool           `json:"isAllDetails"`
 
 	Timestamp int64  `json:"time"`
 	ID        string `json:"id"`
