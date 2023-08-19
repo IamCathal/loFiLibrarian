@@ -23,7 +23,18 @@ var (
 	// shelf URL is being queried
 	GOODREADS_SHELF_URL_PREFIX = GOODREADS_BASE_BOOK_URL + "/review/list/"
 	ONLY_NUMBERS               = regexp.MustCompile(`([0-9]+)`)
+
+	AVG_RATING_FLOAT_ZERO_VALUE   = "\"avgRating\":0.0,"
+	FIXED_AVG_RATING_STRING_VALUE = "\"avgRating\":\"0.0\","
 )
+
+func isZeroAvgRatingError(apiResponse []byte) bool {
+	return strings.Contains(string(apiResponse), AVG_RATING_FLOAT_ZERO_VALUE)
+}
+
+func removeZeroAvgRatingError(apiResponse []byte) []byte {
+	return []byte(strings.Replace(string(apiResponse), AVG_RATING_FLOAT_ZERO_VALUE, FIXED_AVG_RATING_STRING_VALUE, 1))
+}
 
 func stripOfFormatting(input string) string {
 	formatted := strings.ReplaceAll(input, "\n", "")

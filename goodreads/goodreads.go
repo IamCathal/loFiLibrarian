@@ -40,7 +40,18 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 	booksFoundRes := []dtos.GoodReadsSearchBookResult{}
 	err = json.Unmarshal(bodyBytes, &booksFoundRes)
 	if err != nil {
-		return dtos.BookBreadcrumb{}, err
+		// when the average rating is 0.0 the value is a float and not "0.0"
+		// as you'd think it'd be because???
+		if !isZeroAvgRatingError(bodyBytes) {
+			return dtos.BookBreadcrumb{}, err
+		}
+
+		bodyBytes = removeZeroAvgRatingError(bodyBytes)
+		secondMarshalErr := json.Unmarshal(bodyBytes, &booksFoundRes)
+		if secondMarshalErr != nil {
+			logger.Sugar().Errorf("Failed to unmarshal apiResponse twice when zeroAvgRating failure occured: %w", secondMarshalErr)
+			return dtos.BookBreadcrumb{}, err
+		}
 	}
 
 	logger.Sugar().Infof("%d books were found for ID: %s", len(booksFoundRes), ID)
