@@ -58,7 +58,9 @@ func main() {
 	util.SetLogger(logger)
 	rabbitmq.SetLogger(logger)
 
-	rabbitmq.InitConnection()
+	if rabbitmq.IsRabbitMQEnabled() {
+		rabbitmq.InitConnection()
+	}
 
 	if os.Getenv("INFLUX_ENABLE") != "" {
 		initInfluxClient()

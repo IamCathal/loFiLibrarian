@@ -96,3 +96,7 @@ func publish(msgJson []byte) error {
 func errWithTrace(err error) error {
 	return fmt.Errorf(err.Error(), string(debug.Stack()))
 }
+
+func IsRabbitMQEnabled() bool {
+	return os.Getenv("OPT_RABBITMQ_ENABLE") == "true"
+}

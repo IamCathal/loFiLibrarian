@@ -112,7 +112,9 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 
 	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo, false)
 
-	rabbitmq.SyncWriteBookLookup(fullBookInfo)
+	if rabbitmq.IsRabbitMQEnabled() {
+		rabbitmq.SyncWriteBookLookup(fullBookInfo)
+	}
 
 	return fullBookInfo, nil
 }
