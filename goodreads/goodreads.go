@@ -13,6 +13,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/iamcathal/lofilibrarian/dtos"
 	"github.com/iamcathal/lofilibrarian/openlibrary"
+	"github.com/iamcathal/lofilibrarian/rabbitmq"
 	"github.com/iamcathal/lofilibrarian/util"
 	"go.uber.org/zap"
 )
@@ -110,6 +111,8 @@ func lookUpGoodReadsPageForBook(ctx context.Context, bookPageURL string) (dtos.B
 	fullBookInfo.ISBN = ctx.Value(dtos.BOOK_ID).(string)
 
 	util.WriteBookDetailsBreadcrumb(ctx, fullBookInfo, false)
+
+	rabbitmq.SyncWriteBookLookup(fullBookInfo)
 
 	return fullBookInfo, nil
 }

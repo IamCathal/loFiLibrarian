@@ -11,6 +11,7 @@ import (
 	"github.com/iamcathal/lofilibrarian/endpoints"
 	"github.com/iamcathal/lofilibrarian/goodreads"
 	"github.com/iamcathal/lofilibrarian/openlibrary"
+	"github.com/iamcathal/lofilibrarian/rabbitmq"
 	"github.com/iamcathal/lofilibrarian/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 	"github.com/joho/godotenv"
@@ -55,6 +56,9 @@ func main() {
 	goodreads.SetLogger(logger)
 	openlibrary.SetLogger(logger)
 	util.SetLogger(logger)
+	rabbitmq.SetLogger(logger)
+
+	rabbitmq.InitConnection()
 
 	if os.Getenv("INFLUX_ENABLE") != "" {
 		initInfluxClient()
