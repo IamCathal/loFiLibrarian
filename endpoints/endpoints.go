@@ -51,6 +51,8 @@ func SetupRouter() *mux.Router {
 	// r.HandleFunc("/lookup", lookUp).Methods("GET")
 	// r.Use(logMiddleware)
 
+	r.Use(corsMiddleware)
+
 	wsRouter := r.Path("/ws").Subrouter()
 	wsRouter.HandleFunc("/lookup", wsLookUp).Methods("GET")
 
@@ -204,6 +206,16 @@ func logMiddleware(next http.Handler) http.Handler {
 					SetTime(time.Now())
 				writeAPI.WritePoint(context.Background(), point)
 			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		SetupCORS(&w, r)
+		if (*r).Method == "OPTIONS" {
+			return
 		}
 		next.ServeHTTP(w, r)
 	})
