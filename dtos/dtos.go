@@ -64,3 +64,11 @@ type WsLiveStatus struct {
 	ServerSentTime    int64  `json:"serverSentTime"`
 	ServerStartupTime int64  `json:"serverStartupTime,omitempty"`
 }
+
+// Optional, only used when rabbitMQ is enabled
+type MorpheusEvent struct {
+	ID        string `json:"id"`
+	Timestamp int64  `json:"timestamp"`
+	Type      string `json:"type"`
+	Msg       string `json:"data"`
+}

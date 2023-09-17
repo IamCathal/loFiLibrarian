@@ -54,3 +54,12 @@ func NewWsLiveStatus(appStartTime time.Time) WsLiveStatus {
 		ServerStartupTime: appStartTime.UnixMilli(),
 	}
 }
+
+func NewMorpheusEvent(msg string) MorpheusEvent {
+	return MorpheusEvent{
+		//ID:
+		Timestamp: time.Now().UnixMilli(),
+		Type:      "lofilibrarian",
+		Msg:       msg,
+	}
+}

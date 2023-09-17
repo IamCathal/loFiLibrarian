@@ -71,14 +71,18 @@ func SyncWriteBookLookup(breadcrumb dtos.BookBreadcrumb) error {
 	if err != nil {
 		return errWithTrace(err)
 	}
-	return publish(breadCrumbJson)
+
+	return publish(dtos.NewMorpheusEvent(string(breadCrumbJson)))
 }
 
-func publish(msgJson []byte) error {
+func publish(event dtos.MorpheusEvent) error {
+	morpheusEventJson, err := json.Marshal(event)
+	if err != nil {
+		return errWithTrace(err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-
-	fmt.Printf("Publishing %s\n", string(msgJson))
 
 	return rabbitMqChan.PublishWithContext(
 		ctx,
@@ -88,7 +92,7 @@ func publish(msgJson []byte) error {
 		false,
 		amqp.Publishing{
 			ContentType: "text/json",
-			Body:        msgJson,
+			Body:        morpheusEventJson,
 		},
 	)
 }
