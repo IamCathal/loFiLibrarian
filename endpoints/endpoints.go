@@ -157,7 +157,7 @@ func status(w http.ResponseWriter, r *http.Request) {
 	req := dtos.UptimeResponse{
 		Status:      "operational",
 		Uptime:      time.Duration(time.Since(appConfig.ApplicationStartUpTime).Milliseconds()),
-		StartUpTime: appConfig.ApplicationStartUpTime.Unix(),
+		StartUpTime: appConfig.ApplicationStartUpTime.UnixMilli(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

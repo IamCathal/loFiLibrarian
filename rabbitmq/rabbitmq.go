@@ -81,6 +81,7 @@ func publish(event dtos.MorpheusEvent) error {
 		return errWithTrace(err)
 	}
 
+	logger.Sugar().Infof("Publish %+v\n", event)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 

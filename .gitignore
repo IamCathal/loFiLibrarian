@@ -18,6 +18,7 @@ coverage.*
 *.json
 logs/
 .env
+.localenv
 filebeat/
 docker-compose.override.yml
 test/

@@ -38,7 +38,7 @@ func initInfluxClient() {
 }
 
 func main() {
-	godotenv.Load()
+	godotenv.Load(".env", ".localenv")
 
 	logConfig := zap.NewProductionConfig()
 	logConfig.OutputPaths = []string{"stdout", "logs/appLog.log"}
