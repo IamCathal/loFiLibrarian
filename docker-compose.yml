@@ -8,10 +8,9 @@ services:
       - ./logs/:/logs/
     ports:
       - '2946:2946'
-    networks:
-      - elk
     restart: on-failure
 
-networks:
-  elk:
-    driver: bridge
+networks: 
+  default: 
+    external: 
+      name: external-kr-network 
