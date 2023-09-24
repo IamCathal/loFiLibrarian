@@ -72,7 +72,7 @@ func SyncWriteBookLookup(breadcrumb dtos.BookBreadcrumb) error {
 		return errWithTrace(err)
 	}
 
-	return publish(dtos.NewMorpheusEvent(string(breadCrumbJson)))
+	return publish(dtos.NewMorpheusEvent(string(breadCrumbJson), "info"))
 }
 
 func publish(event dtos.MorpheusEvent) error {

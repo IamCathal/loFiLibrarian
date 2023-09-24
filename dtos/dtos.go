@@ -70,5 +70,6 @@ type MorpheusEvent struct {
 	ID        string `json:"id"`
 	Timestamp int64  `json:"timestamp"`
 	Type      string `json:"type"`
+	Level     string `json:"level"`
 	Msg       string `json:"data"`
 }
