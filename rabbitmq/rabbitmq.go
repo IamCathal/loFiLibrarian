@@ -87,7 +87,7 @@ func publish(event dtos.MorpheusEvent) error {
 
 	return rabbitMqChan.PublishWithContext(
 		ctx,
-		"",
+		"lofilibrarian",
 		queueName,
 		false,
 		false,
