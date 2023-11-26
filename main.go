@@ -58,6 +58,7 @@ func main() {
 	util.SetLogger(logger)
 	rabbitmq.SetLogger(logger)
 
+	logger.Sugar().Infof("RabbitMQ enabled %v", rabbitmq.IsRabbitMQEnabled())
 	if rabbitmq.IsRabbitMQEnabled() {
 		rabbitmq.InitConnection()
 	}

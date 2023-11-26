@@ -4,17 +4,18 @@ let lastFoundBookID;
 var barcodeDetector;
 
 document.getElementById("searchButton").addEventListener("click", () => {
-    lookUpIdWs(document.getElementById("bookIDInput").value)
+    lookUpISBN(document.getElementById("bookIDInput").value)
+    document.getElementById("bookIDInput").value = ""
 })
 
 document.getElementById("clearButton").addEventListener("click", (ev) => {
     clearBooks()
+    clearAndHideErrorBoxes()
 })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
 
 try {
     barcodeDetector = new BarcodeDetector();
@@ -23,24 +24,19 @@ try {
     hideWebcamElements()
 }
 
-function hideWebcamElements() {
-    document.getElementById("webcamElements").style.display = "none";
-    document.getElementById("manualEntryDetail").setAttribute("open", true)
-}
-
 giveSwayaaangBordersToItems()
-webcam()
-setupLiveStatusWs()
-setInterval(tryToDetectISBN, 150)
+displayWebcamViewIsPossible()
+receiveWebsocketLiveStats(0)
+setInterval(detectAndLookupISBN, 150)
 
-
-function giveSwayaaangBordersToItems() {
-    document.getElementById("bookInfoDiv").style += swayaaangBorders(0.8)
-    document.getElementById("clearButton").style += swayaaangBorders(0.8)
-    document.getElementById("searchButton").style += swayaaangBorders(0.8)
+function lookUpISBN(id){
+    return new Promise((resolve, reject) => {
+        addSearchButtonLoadAnimation()
+        lookUpISBNThroughWebsocket(id)
+    })
 }
 
-function webcam() {
+function displayWebcamViewIsPossible() {
     navigator.mediaDevices.getUserMedia({
         video: {
             height: {
@@ -62,7 +58,7 @@ function webcam() {
     });
 }
 
-function setupLiveStatusWs() {
+function receiveWebsocketLiveStats() {
     try {
         const socket = new WebSocket(`wss://${getCurrentHostname()}/livestatus`);
         socket.onopen = function(ev) {
@@ -88,6 +84,7 @@ function setupLiveStatusWs() {
         }
 
         socket.onclose = function(ev) {
+            displayErrorMessage(`Stats websocket closed, reason: '${ev.reason == "" ? "nothing" : ev.reason}' was clean: ${ev.wasClean}`)
             console.log("Closed heartbeat ws connection")
         }
     } catch (error) {
@@ -95,28 +92,33 @@ function setupLiveStatusWs() {
     }
 }
 
-function tryToDetectISBN() {
+function detectAndLookupISBN() {
     if (videoStream != null && bookWasFoundDontScanAgainInInterval == false) {
         let capturer = new ImageCapture(videoStream.getVideoTracks()[0])
 
         capturer.grabFrame().then(bitMap => {
             barcodeDetector.detect(bitMap)
                 .then((barcodes) => {
-                    if (barcodes.length >= 1) {
-                        if (barcodes[0].rawValue == lastFoundBookID) {
-                            document.getElementById("detectionInfo").textContent = `This book was just looked up`
-                        } else {
-                            bookWasFoundDontScanAgainInInterval = true
-                            document.getElementById("detectionInfo").textContent = `Detected: ${barcodes[0].rawValue}`
-                            lookUpIdWs(barcodes[0].rawValue)
-                            lastFoundBookID = barcodes[0].rawValue
-
-                            setTimeout(() => {
-                                document.getElementById("detectionInfo").textContent = `Looking for ISBN...`
-                                bookWasFoundDontScanAgainInInterval = false
-                            }, 500)
-                        }
+                    if (barcodes.length == 0) {
+                        return
                     }
+
+                    if (barcodes[0].rawValue == lastFoundBookID) {
+                        document.getElementById("detectionInfo").textContent = `This book was just looked up`
+                        return
+                    } 
+
+
+                    bookWasFoundDontScanAgainInInterval = true
+                    document.getElementById("detectionInfo").textContent = `Detected: ${barcodes[0].rawValue}`
+                    lookUpISBN(barcodes[0].rawValue)
+                    lastFoundBookID = barcodes[0].rawValue
+
+                    setTimeout(() => {
+                        document.getElementById("detectionInfo").textContent = `Looking for ISBN...`
+                        bookWasFoundDontScanAgainInInterval = false
+                    }, 500)
+
                 })
                 .catch((err) => {
                 console.error(err);
@@ -124,13 +126,6 @@ function tryToDetectISBN() {
             });
         })
     }
-}
-
-function lookUpIdWs(id){
-    return new Promise((resolve, reject) => {
-        addSearchButtonSkeleton()
-        lookUpWs(id)
-    })
 }
 
 function renderPartialBookBreadcrumb(bookInfo, timeTaken, timeTakenForInitialRequest) {
@@ -197,6 +192,76 @@ function renderPartialBookBreadcrumb(bookInfo, timeTaken, timeTakenForInitialReq
     ` + document.getElementById("bookInfoDiv").innerHTML 
 }
 
+function lookUpISBNThroughWebsocket(bookId) {
+    const startTime = new Date()
+    const socket = new WebSocket(`ws://${getCurrentHostname()}/eee`);
+    
+    socket.onopen = function(ev) {
+        const lookUpRequest = {
+            "id": crypto.randomUUID(),
+            "bookId": bookId
+        }
+        socket.send(JSON.stringify(lookUpRequest))
+    }
+
+    let partialBookBreadcrumbReceived = false
+    let timeTakenForInitialRequest = 0
+
+
+    socket.onmessage = function(ev) {
+        const response = JSON.parse(ev.data)
+        console.log(`Latency is ${millisecondsSince(new Date(response.time))}ms`)
+        console.log(response)
+
+        switch (response.type) {
+            case "message":
+                timeTakenForInitialRequest = new Date().getTime() - startTime.getTime()
+                break
+
+            case "bookInfo":
+            console.log(response.bookInfo)
+            if (response.isFromOpenLibrary) {
+                console.log(response)
+                renderOpenLibrarySearch(response, timeTakenForInitialRequest)
+                break
+            }
+
+            if (!partialBookBreadcrumbReceived) {
+                partialBookBreadcrumbReceived = true
+
+                if (noBookWasFound(response)) {
+                    console.log("no book was found")
+                    renderNoBookFound(response)
+                } else {
+                    renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
+                }
+            } else {
+                renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
+            }
+            break
+
+            case "error":
+                console.error(response);
+                displayErrorMessage(`Error querying book ${error.bookId}: ${error.errorMessage}`)
+                break
+
+            default:
+            console.error("no type given")
+        }
+    }
+
+    socket.onerror = function (ev) {
+        console.error(`Websocket error: ${ev}`)
+        console.log(ev)
+        displayErrorMessage(ev)
+    }
+
+    socket.onclose = function(ev) {
+      console.log("socket closed!")
+      removeSearchButtonLoadAnimation()
+    }
+}
+
 function renderRemainingBookBreadcrumbDetails(bookInfo, timeTaken) {
     removeAllSkeletonLoadingStyling()
 
@@ -238,102 +303,24 @@ function renderNoBookFound(response) {
     `
 }
 
-function fillInGenreBlocks(genres) {
-    let output = ""
-    genres.forEach(genre => {
-        output += `<div class="m-1 pl-1 pr-1 genreBox ${getGenreClass(genre)}"> ${genre} </div>`
-    })
-    return output
-}
-
-function clearBooks() {
-    document.getElementById("bookInfoDiv").innerHTML = ""
-}
-
-function lookUpWs(bookId) {
-    const startTime = new Date()
-    const socket = new WebSocket(`wss://${getCurrentHostname()}/eee`);
-    socket.onopen = function(ev) {
-        const lookUpRequest = {
-            "id": crypto.randomUUID(),
-            "bookId": bookId
-        }
-        socket.send(JSON.stringify(lookUpRequest))
-    }
-
-    let partialBookBreadcrumbReceived = false
-    let timeTakenForInitialRequest = 0
-
-
-    socket.onmessage = function(ev) {
-        const response = JSON.parse(ev.data)
-        console.log(`Latency is ${millisecondsSince(new Date(response.time))}ms`)
-        console.log(response)
-
-        switch (response.type) {
-            case "message":
-                timeTakenForInitialRequest = new Date().getTime() - startTime.getTime()
-                break
-
-            case "bookInfo":
-            console.log(response.bookInfo)
-            if (response.isFromOpenLibrary) {
-                console.log(response)
-                renderOpenLibrarySearch(response, timeTakenForInitialRequest)
-                break
-            }
-
-            if (!partialBookBreadcrumbReceived) {
-                partialBookBreadcrumbReceived = true
-
-                if (noBookWasFound(response)) {
-                console.log("no book was found")
-                renderNoBookFound(response)
-                } else {
-                renderPartialBookBreadcrumb(response.bookInfo, response.timeTaken, timeTakenForInitialRequest)
-                }
-            } else {
-                renderRemainingBookBreadcrumbDetails(response.bookInfo, response.timeTaken)
-            }
-            break
-
-            case "error":
-                console.error(response);
-                writeErrorMessageBox(response)
-                // document.getElementById("bookInfoDiv").innerHTML = response.errorMessage
-                break
-
-            default:
-            console.error("no type given")
-        }
-    }
-
-    socket.onclose = function(ev) {
-      console.log("socket closed!")
-      removeSearchButtonSkeleton()
-    }
-}
-
-function writeErrorMessageBox(error) {
+function displayErrorMessage(errorMessage) {
     removeAllSkeletonLoadingStyling()
     document.getElementById("bookErrorBlock").style.visibility = "visible";
 
     document.getElementById("bookErrorDiv").innerHTML +=
     `
             <div class="row pl-2 pr-2 redErrorText">
-                Error querying book ${error.bookId}: ${error.errorMessage}                    
+                ${errorMessage}
             </div>
     `
 }
 
-
-function addSearchButtonSkeleton() {
+function addSearchButtonLoadAnimation() {
     document.getElementById("searchButton").classList.add("skeleton")
     document.getElementById("searchButton").style.color = "#22242f"
 }
 
-
-function removeSearchButtonSkeleton() {
+function removeSearchButtonLoadAnimation() {
     document.getElementById("searchButton").classList.remove("skeleton")
     document.getElementById("searchButton").style.color = "#c0c0c0"
 }
@@ -419,4 +406,35 @@ function getAvgPing(latencies) {
 
 function noBookWasFound(response) {
     return response.bookInfo.title == ""
+}
+
+function giveSwayaaangBordersToItems() {
+    document.getElementById("bookInfoDiv").style += swayaaangBorders(0.8)
+    document.getElementById("clearButton").style += swayaaangBorders(0.8)
+    document.getElementById("searchButton").style += swayaaangBorders(0.8)
+}
+
+function hideWebcamElements() {
+    document.getElementById("webcamElements").style.display = "none";
+    document.getElementById("manualEntryDetail").setAttribute("open", true)
+}
+
+function fillInGenreBlocks(genres) {
+    let output = ""
+    genres.forEach(genre => {
+        output += `<div class="m-1 pl-1 pr-1 genreBox ${getGenreClass(genre)}"> ${genre} </div>`
+    })
+    return output
+}
+
+function clearBooks() {
+    document.getElementById("bookInfoDiv").innerHTML = ""
+}
+
+function clearAndHideErrorBoxes() {
+    document.getElementById("bookErrorBlock").style.visibility = "hidden"
+    document.getElementById("bookErrorDiv").innerHTML = ""
+
+    document.getElementById("websocketErrorBlock").style.visibility = "hidden"
+    document.getElementById("websocketErrorDiv").innerHTML = ""
 }

@@ -70,7 +70,7 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 	book := booksFoundRes[0]
 	floatRating, err := strToFloat(book.AvgRating)
 	if err != nil || len(booksFoundRes) == 0 {
-		return dtos.BookBreadcrumb{}, err
+		return dtos.BookBreadcrumb{}, fmt.Errorf("failed to extract avgRating: %w", err)
 	}
 
 	possibleBookUrl := ""
