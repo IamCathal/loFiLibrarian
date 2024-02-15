@@ -5,9 +5,17 @@ import (
 	"time"
 )
 
+var (
+	MGS_WS_MESSAGE_TYPE            = "message"
+	ERROR_WS_MESSAGE_TYPE          = "error"
+	BOOK_INFO_WS_MESSAGE_TYPE      = "bookInfo"
+	WS_LIVE_STATUS_WS_MESSAGE_TYPE = "liveStatus"
+	MORPHEUS_EVENT_TYPE            = "lofilibrarian"
+)
+
 func NewWsMessage(ctx context.Context, msg string) wsMessage {
 	return wsMessage{
-		Type: "message",
+		Type: MGS_WS_MESSAGE_TYPE,
 		Msg:  msg,
 
 		Timestamp: time.Now().UnixMilli(),
@@ -21,7 +29,7 @@ func NewWsBookInfo(ctx context.Context, bookInfo BookBreadcrumb, isFromOpenLibra
 	ctx = context.WithValue(ctx, TIME_TAKEN, time.Now().UnixMilli()-startTime)
 
 	return wsBookInfo{
-		Type:              "bookInfo",
+		Type:              BOOK_INFO_WS_MESSAGE_TYPE,
 		BookInfo:          bookInfo,
 		IsFromOpenLibrary: isFromOpenLibrary,
 
@@ -37,7 +45,7 @@ func NewWsError(ctx context.Context, msg string) wsError {
 	ctx = context.WithValue(ctx, TIME_TAKEN, time.Now().UnixMilli()-startTime)
 
 	return wsError{
-		Type:         "error",
+		Type:         ERROR_WS_MESSAGE_TYPE,
 		ErrorMessage: msg,
 
 		Timestamp: time.Now().UnixMilli(),
@@ -49,7 +57,7 @@ func NewWsError(ctx context.Context, msg string) wsError {
 
 func NewWsLiveStatus(appStartTime time.Time) WsLiveStatus {
 	return WsLiveStatus{
-		Type:              "liveStatus",
+		Type:              WS_LIVE_STATUS_WS_MESSAGE_TYPE,
 		ServerSentTime:    time.Now().UnixMilli(),
 		ServerStartupTime: appStartTime.UnixMilli(),
 	}
@@ -59,7 +67,7 @@ func NewMorpheusEvent(msg, level string) MorpheusEvent {
 	return MorpheusEvent{
 		//ID:
 		Timestamp: time.Now().UnixMilli(),
-		Type:      "lofilibrarian",
+		Type:      MORPHEUS_EVENT_TYPE,
 		Level:     level,
 		Msg:       msg,
 	}
