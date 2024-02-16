@@ -213,7 +213,7 @@ func logMiddleware(next http.Handler) http.Handler {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		SetupCORS(&w, r)
+		SetupCORS(w, r)
 		if (*r).Method == "OPTIONS" {
 			return
 		}

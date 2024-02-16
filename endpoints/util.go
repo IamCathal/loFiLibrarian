@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+var (
+	X_REAL_IP_HEADER   = "X-Real-Ip"
+	REMOTE_ADDR_HEADER = "RemoteAddr"
+)
+
 func DisallowFileBrowsing(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = filepath.Clean(r.URL.Path)
@@ -42,16 +47,16 @@ func isValidInt(strInt string) bool {
 }
 
 func getRealIP(r *http.Request) string {
-	if r.Header.Get("X-Real-Ip") != "" {
-		return r.Header.Get("X-Real-Ip")
-	} else if r.Header.Get("RemoteAddr") != "" {
-		return r.Header.Get("RemoteAddr")
+	if r.Header.Get(X_REAL_IP_HEADER) != "" {
+		return r.Header.Get(X_REAL_IP_HEADER)
+	} else if r.Header.Get(REMOTE_ADDR_HEADER) != "" {
+		return r.Header.Get(REMOTE_ADDR_HEADER)
 	}
 	return r.RemoteAddr
 }
 
-func SetupCORS(w *http.ResponseWriter, req *http.Request) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+func SetupCORS(w http.ResponseWriter, req *http.Request) {
+	(w).Header().Set("Access-Control-Allow-Origin", "*")
+	(w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	(w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
