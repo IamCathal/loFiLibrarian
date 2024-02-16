@@ -4,37 +4,27 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/iamcathal/lofilibrarian/dtos"
 	"github.com/iamcathal/lofilibrarian/endpoints"
 	"github.com/iamcathal/lofilibrarian/goodreads"
+	"github.com/iamcathal/lofilibrarian/influxdb"
 	"github.com/iamcathal/lofilibrarian/openlibrary"
 	"github.com/iamcathal/lofilibrarian/rabbitmq"
 	"github.com/iamcathal/lofilibrarian/util"
-	influxdb2 "github.com/influxdata/influxdb-client-go"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
 var (
 	ApplicationStartUpTime time.Time
-	InfluxDBClient         influxdb2.Client
 )
 
 func initConfig() dtos.AppConfig {
 	return dtos.AppConfig{
 		ApplicationStartUpTime: time.Now(),
 	}
-}
-
-func initInfluxClient() {
-	client := influxdb2.NewClientWithOptions(
-		os.Getenv("INFLUXDB_URL"),
-		os.Getenv("LOFI_BUCKET_TOKEN"),
-		influxdb2.DefaultOptions().SetBatchSize(10))
-	InfluxDBClient = client
 }
 
 func main() {
@@ -58,14 +48,13 @@ func main() {
 	util.SetLogger(logger)
 	rabbitmq.SetLogger(logger)
 
-	logger.Sugar().Infof("RabbitMQ enabled %v", rabbitmq.IsRabbitMQEnabled())
+	logger.Sugar().Infof("RabbitMQ enabled: %v", rabbitmq.IsRabbitMQEnabled())
 	if rabbitmq.IsRabbitMQEnabled() {
 		rabbitmq.InitConnection()
 	}
-
-	if os.Getenv("INFLUX_ENABLE") != "" {
-		initInfluxClient()
-		endpoints.InitInfluxClient(InfluxDBClient)
+	logger.Sugar().Infof("InfluxDB enabled: %v", influxdb.IsInfluxDBEnabled())
+	if influxdb.IsInfluxDBEnabled() {
+		influxdb.InitInfluxClient()
 	}
 
 	port := 2946
@@ -79,6 +68,6 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 	}
 
-	logger.Sugar().Infof("Service requests on :%d", port)
+	logger.Sugar().Infof("Servicing requests on :%d", port)
 	log.Fatal(srv.ListenAndServe())
 }

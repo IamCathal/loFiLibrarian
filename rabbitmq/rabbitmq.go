@@ -25,8 +25,6 @@ func SetLogger(newLogger *zap.Logger) {
 }
 
 func InitConnection() (amqp.Queue, amqp.Channel) {
-	fmt.Println(os.Getenv("OPT_RABBITMQ_USER"), os.Getenv("OPT_RABBITMQ_PASSWORD"), os.Getenv("OPT_RABBITMQ_URL"))
-
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s", os.Getenv("OPT_RABBITMQ_USER"), os.Getenv("OPT_RABBITMQ_PASSWORD"), os.Getenv("OPT_RABBITMQ_URL")))
 	if err != nil {
 		panic(err)

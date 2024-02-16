@@ -58,6 +58,7 @@ func IsbnSearch(ctx context.Context, isbn string) (dtos.BookBreadcrumb, error) {
 		}
 
 		errorsEncountered = append(errorsEncountered, fmt.Errorf("failed to unmarshal openLibrary json response: %w", decodeErr))
+		break
 	}
 
 	logger.Sugar().Warnf("Failed to search openLibrary for bookId: %s after %d retries: %+v", isbn, attemptsMade, errorsEncountered)

@@ -5,16 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/iamcathal/lofilibrarian/dtos"
 	"github.com/iamcathal/lofilibrarian/goodreads"
+	"github.com/iamcathal/lofilibrarian/influxdb"
 	"github.com/iamcathal/lofilibrarian/openlibrary"
 	"github.com/iamcathal/lofilibrarian/util"
-	influxdb2 "github.com/influxdata/influxdb-client-go"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +24,6 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	InfluxDBClient influxdb2.Client
 
 	TEXT              = websocket.TextMessage
 	PING_TIMEOUT_WAIT = 1800 * time.Millisecond
@@ -34,10 +32,6 @@ var (
 func InitConfig(conf dtos.AppConfig, newLogger *zap.Logger) {
 	appConfig = conf
 	logger = newLogger
-}
-
-func InitInfluxClient(client influxdb2.Client) {
-	InfluxDBClient = client
 }
 
 func SetupRouter() *mux.Router {
@@ -196,15 +190,10 @@ func logMiddleware(next http.Handler) http.Handler {
 		// 	logger.Sugar().Infow(fmt.Sprintf("Served request to %v", r.URL.Path),
 		// 		zap.String("requestInfo", fmt.Sprintf("%+v", r)))
 		// }
-		if os.Getenv("INFLUX_ENABLE") != "" {
+		if influxdb.IsInfluxDBEnabled() {
 			realIp := getRealIP(r)
 			if realIp != "" {
-				writeAPI := InfluxDBClient.WriteAPIBlocking(os.Getenv("ORG"), os.Getenv("LOFI_BUCKET"))
-				point := influxdb2.NewPointWithMeasurement("clientIPLog").
-					AddTag("clientIP", realIp).
-					AddField("service", "lofilibrarian").
-					SetTime(time.Now())
-				writeAPI.WritePoint(context.Background(), point)
+				influxdb.WriteMetricPoint(realIp)
 			}
 		}
 		next.ServeHTTP(w, r)

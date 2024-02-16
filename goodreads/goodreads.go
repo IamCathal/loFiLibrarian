@@ -56,7 +56,7 @@ func GetBookDetailsWs(ctx context.Context, ID string) (dtos.BookBreadcrumb, erro
 		}
 	}
 
-	logger.Sugar().Infof("%d books were found for ID: %s", len(booksFoundRes), ID)
+	logger.Sugar().Infof("%d books were found on goodreads for ID: %s", len(booksFoundRes), ID)
 	if len(booksFoundRes) == 0 {
 		bookInfo, err := openlibrary.IsbnSearch(ctx, ID)
 		if err != nil {
