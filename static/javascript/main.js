@@ -58,10 +58,21 @@ function displayWebcamViewIsPossible() {
     });
 }
 
-function receiveWebsocketLiveStats() {
+function receiveWebsocketLiveStats(retryCount) {
+    if (retryCount  >= 120) {
+        console.log("More than 5 retries, won't try connecting to livestatus endpoint again")
+        return
+    }
+    console.log(`Trying to connect to livestatus endpoint, retryCount ${retryCount}`)
+
     try {
-        const socket = new WebSocket(`wss://${getCurrentHostname()}/livestatus`);
+        const socket = new WebSocket(`ws://${getCurrentHostname()}/livestatus`);
         socket.onopen = function(ev) {
+            if (retryCount > 0) {
+                displayReconnectionMessage(retryCount)
+                retryCount = 0
+            }
+
             console.log("Opened heartbeat ws connection")
         }
 
@@ -86,6 +97,9 @@ function receiveWebsocketLiveStats() {
         socket.onclose = function(ev) {
             displayErrorMessage(`Stats websocket closed, reason: '${ev.reason == "" ? "nothing" : ev.reason}' was clean: ${ev.wasClean}`)
             console.log("Closed heartbeat ws connection")
+
+            retryCount++
+            receiveWebsocketLiveStats(retryCount)
         }
     } catch (error) {
         console.error(error)
@@ -311,6 +325,18 @@ function displayErrorMessage(errorMessage) {
     `
             <div class="row pl-2 pr-2 redErrorText">
                 ${errorMessage}
+            </div>
+    `
+}
+
+function displayReconnectionMessage(retryCount) {
+    removeAllSkeletonLoadingStyling()
+    document.getElementById("bookErrorBlock").style.visibility = "visible";
+
+    document.getElementById("bookErrorDiv").innerHTML +=
+    `
+            <div class="row pl-2 pr-2 redErrorText">
+                Reconnected successfully after ${retryCount} attempts
             </div>
     `
 }
