@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/iamcathal/lofilibrarian/dtos"
@@ -74,14 +73,9 @@ func openLibBookToBreadcrumb(isbn string, openLibBook dtos.OpenLibraryBook) dtos
 		Pages:        openLibBook.NumberOfPages,
 		Rating:       0,
 		RatingsCount: 0,
-		Genres:       getSliceFromOpenLibGenres(openLibBook.Subjects),
+		Genres:       openLibBook.Subjects,
 		ISBN:         isbn,
 	}
-}
-
-func getSliceFromOpenLibGenres(genreStrings []string) []string {
-	allElementsCombined := strings.Join(genreStrings, ",")
-	return strings.Split(allElementsCombined, ",")
 }
 
 func makeIsbnSearch(ctx context.Context, isbn string) (io.ReadCloser, error) {
