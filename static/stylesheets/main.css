@@ -1,9 +1,23 @@
 * {
-  /* font-family: 'Grotesk Regular'; */
-  font-family: 'AllianceNo2 Regular';
+  font-family: Arial, sans-serif;
   color: white;
 }
 
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+
+.horizontalContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* div {
+  border: 1px solid yellowgreen;
+} */
 a {
   color: #74797b;
 }
@@ -21,6 +35,7 @@ body {
 
 #bookInfoDiv {
   border: 2px solid #c0c0c0;
+  padding: 0.7rem;
 }
 
 .bold {
@@ -31,6 +46,10 @@ body {
   font-size: 0.8rem;
   font-weight: bold;
   color: #22242f;
+  margin-left: 0.4rem;
+  margin-right: 0.4rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
 }
 
 .goodGenre {
@@ -117,20 +136,6 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-@font-face {
-  font-family: 'AllianceNo2 Regular';
-  src: url(../fonts/AllianceNo2-Medium.woff2) format('woff2');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'AllianceNo2 Bold';
-  src: url(../fonts/AllianceNo2-Bold.woff2) format('woff2');
-  font-weight: 400;
-  font-style: normal;
-}
-
 .errorMessageBox {
   background-color: #070707;
 }
@@ -146,4 +151,8 @@ input[type=number] {
 
 .statsSubText {
   font-size: 0.6em;
+}
+
+.centerText {
+  text-align: center;
 }

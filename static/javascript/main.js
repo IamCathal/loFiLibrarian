@@ -145,63 +145,61 @@ function detectAndLookupISBN() {
 function renderPartialBookBreadcrumb(bookInfo, timeTaken, timeTakenForInitialRequest) {
     document.getElementById("bookInfoDiv").innerHTML = 
     `
-                <div class="row pt-1 pb-1 pl-2 pr-2" id="${bookInfo.isbn}">
-                    <div class="col">
-                        <div class="row">
-                        <div class="col-3 pl-1 pr-1">
-                        <a href="${bookInfo.link}">
-                            <img 
-                            src="${bookInfo.mainCover}"
-                            style="width: 90%"
-                            >
-                        </a>
-                        </div>
-                        <div class="col">
-                        <div class="row bookTitle">
-                            ${bookInfo.title}
-                        </div>
-                        <div class="row bookSubInfo bookSeries skeleton" id="${bookInfo.isbn}-series" style="width: 9.2rem; height: 1.2rem">
-                            ${bookInfo.series}
-                        </div>
-                        <div class="row bookSubInfo">
-                            ${bookInfo.author}
-                        </div>
-                        <div class="row bookPagesAndReview">
-                            <div>
+    <div id="${bookInfo.isbn}">
+        <div class="horizontalContainer">
+            <div style="flex: 0 0 20%;">
+                <a href="${bookInfo.link}">
+                    <img 
+                        src="${bookInfo.mainCover}" 
+                        style="width: 90%"
+                    >
+                </a>
+            </div>
+            <div style="flex: 0 0 80%;">
+                <div class="container">
+                    <div class="bookTitle">
+                        ${bookInfo.title}
+                    </div>
+                    <div class="bookSubInfo bookSeries" id="${bookInfo.isbn}-series" style="width: 100%; height: 1.2rem;">
+                        ${bookInfo.series}
+                    </div>
+                    <div class="bookSubInfo">
+                        ${bookInfo.author}
+                    </div>
+                    <div class="horizontalContainer bookPagesAndReview">
+                        <div style="flex-grow: 3" class="centerText">
                             ${bookInfo.pages.toLocaleString()} 🗐
-                            </div>
-                            <div class="pl-3">
+                        </div style="flex-grow: 3" class="centerText">
+                        <div>
                             ${bookInfo.rating} ✯
-                            </div>
-                            <div class="pl-3">
+                        </div>
+                        <div style="flex-grow: 3" class="centerText">
                             ${bookInfo.ratingsCount.toLocaleString()} 🯈
-                            </div>
-                        </div>
-                        <div class="row bookSubInfo" id="${bookInfo.isbn}-genres">
-                            <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 9.2rem; height: 1.2rem"> </div>
-                            <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 5.1rem; height: 1.2rem"> </div>
-                            <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 2.8rem; height: 1.2rem"> </div>
-                            <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 6.5rem; height: 1.2rem"> </div>
-                            <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 3.5rem; height: 1.2rem"> </div>
-                        </div>
-                        </div>
-                        </div>
-
-                        <div class="row pt-1">
-                            <div class="col text-center timeTakenText" id="${bookInfo.isbn}-firstRequestTimeTaken">
-                            ${timeTakenString(timeTakenForInitialRequest)}
-                            </div>
-                            <div class="col text-center timeTakenText" id="${bookInfo.isbn}-apiLookUpTimeTaken">
-                            ${timeTakenString(timeTaken)}
-                            </div>
-                            <div class="col text-center timeTakenText" id="${bookInfo.isbn}-pageLookupTimeTaken">
-
-                            </div>
                         </div>
                     </div>
+                    <div class="horizontalContainer bookSubInfo" id="${bookInfo.isbn}-genres">
+                        <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 9.2rem; height: 1.2rem"> </div>
+                        <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 5.1rem; height: 1.2rem"> </div>
+                        <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 2.8rem; height: 1.2rem"> </div>
+                        <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 6.5rem; height: 1.2rem"> </div>
+                        <div class="m-1 pl-1 pr-1 genreBox skeleton" style="width: 3.5rem; height: 1.2rem"> </div>
+                    </div>
                 </div>
+            </div>
+        </div>
 
-                <hr class="mt-0 mb-4" style="background-color: #c0c0c0"/>
+        <div class="horizontalContainer">
+            <div class="centerText timeTakenText" id="${bookInfo.isbn}-firstRequestTimeTaken" style="flex-grow: 3;">
+                ${timeTakenString(timeTakenForInitialRequest)}
+            </div>
+            <div class="centerText timeTakenText" id="${bookInfo.isbn}-apiLookUpTimeTaken" style="flex-grow: 3;">
+                ${timeTakenString(timeTaken)}
+            </div>
+            <div class="centerText timeTakenText" id="${bookInfo.isbn}-pageLookupTimeTaken" style="flex-grow: 3;">
+                
+            </div>
+        </div>
+    </div>
     
     ` + document.getElementById("bookInfoDiv").innerHTML 
 }

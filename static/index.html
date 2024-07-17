@@ -4,15 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"> -->
     <link rel="stylesheet" href="static/stylesheets/main.css">
 
     <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script> 
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script> -->
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/favicons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicons/favicon-16x16.png">
 
     <title>LoFi Librarian</title>
@@ -20,23 +18,19 @@
 </head>
 
 <body>
-    <div class="container mt-4 swankyBorders" id="webcamElements" style="border: 2px solid #c0c0c0">
-        <div class="row pt-3">
-            <div class="col text-center">
-                <video id="vidOutput" autoplay> </video>
-            </div>
+    <div class="container swankyBorders" id="webcamElements" style="align-items: center; ">
+        <div>
+            <video id="vidOutput" autoplay> </video>
         </div>
-        <div class="row">
-            <div class="col text-center" id="detectionInfo">
-                Looking for ISBN...
-            </div>
+        <div id="detectionInfo">
+            Looking for ISBN...
         </div>
     </div>
 
-    <div class="container pl-2 pr-2 pt-3">
+    <div class="container">
 
-        <details id="manualEntryDetail">
-            <summary class="text-center">
+        <details id="manualEntryDetail" class="centerText">
+            <summary>
                 Manual Entry
             </summary>
             <div class="row pt-2 pl-3 pr-3">
@@ -50,17 +44,15 @@
                     >
                 </div>
             </div>
-            <div class="row pt-2 pb-2">
-                <div class="col pr-2">
+            <div>
+                <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
                     <button id="clearButton">Clear</button>    
                 </div>
-                <div class="col pl-2">
+                <div style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
                     <button id="searchButton">Search</button>    
                 </div>
             </div>
         </details>
-
-        <div class="row pt-2"> </div>
 
         <div class="row pl-3 pr-3 pb-2" id="websocketErrorBlock" style="visibility: hidden;">
             <div class="col pl-3 pr-3 errorMessageBox" id="websocketErrorDiv">
@@ -68,46 +60,35 @@
             </div>
         </div>
 
-        <div class="row pl-3 pr-3 pb-2" id="liveStatusBox">
-            <div class="col pl-3 pr-3">
-                <div class="row">
-                    <div class="col text-center statsMainText" id="uptime">
-                        
-                    </div>
+        <div id="liveStatusBox" class="horizontalContainer">
+            <div style="flex-grow: 3;" class="centerText">
+                <div class="col text-center statsMainText" id="uptime">
+                    
                 </div>
-                <div class="row" >
-                    <div class="col text-center statsSubText">
-                        uptime
-                    </div>
+                <div class="col text-center statsSubText">
+                    uptime
                 </div>
             </div>
 
-            <div class="col pl-3 pr-3">
-                <div class="row">
-                    <div class="col text-center statsMainText" id="currPing">
-                        
-                    </div>
+            <div style="flex-grow: 3;" class="centerText">
+                <div class="col text-center statsMainText" id="currPing">
+                    
                 </div>
-                <div class="row" >
-                    <div class="col text-center statsSubText">
-                        ping
-                    </div>
+                <div class="col text-center statsSubText">
+                    ping
                 </div>
             </div>
 
-            <div class="col pl-3 pr-3">
-                <div class="row">
-                    <div class="col text-center statsMainText" id="avgPing">
-                        
-                    </div>
+            <div style="flex-grow: 3;" class="centerText">
+                <div class="col text-center statsMainText" id="avgPing">
+                    
                 </div>
-                <div class="row" >
-                    <div class="col text-center statsSubText">
-                        avg ping
-                    </div>
+                <div class="col text-center statsSubText">
+                    avg ping
                 </div>
             </div>
         </div>
+        
 
         <div class="row pl-3 pr-3 pb-2" id="bookErrorBlock" style="visibility: hidden;">
             <div class="col pl-3 pr-3 errorMessageBox" id="bookErrorDiv">
@@ -115,8 +96,8 @@
             </div>
         </div>
 
-        <div class="row pl-3 pr-3">
-            <div class="col p-3" id="bookInfoDiv">
+        <div>
+            <div id="bookInfoDiv">
                 
             </div>
         </div>
